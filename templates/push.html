@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Books</title>
+</head>
+
+<body>
+    <form enctype="multipart/form-data" action="/push" method="post" id="form"> <!--http://localhost:8080/push-->
+        <input type="file" name="book" accept=".pdf" />
+        <input type="text" name="book_title" placeholder="book title" />
+        <input type="text" name="author" placeholder="author" />
+        <input type="text" name="genre" placeholder="genre" />
+        <input type="number" min="1000" max="3000" step="1" name="year" placeholder="production date" />
+        <input type="submit" value="upload" name="submit" />
+
+        <script>
+            const book = document.getElementById("book");
+            const book_title = document.getElementById("book_title");
+            const author = document.getElementById("author");
+            const genre = document.getElementById("genre");
+            const year = document.getElementById("year");
+
+            window.onbeforeunload = function () {
+                book.value = "";
+                book_title.value = "";
+                author.value = "";
+                genre.value = "";
+                year.value = "";
+            };
+        </script>
+</body>
+
+</html>
