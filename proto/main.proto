@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+package bookservermicro;
+option go_package = "example.org/bookservermicro;pb";
+
+import "api/annotations.proto";
+import "openapiv3/annotations.proto";
+
+service Server {
+    rpc HOME(Empty) returns (StatusRsp) {
+        option (micro.openapiv3.openapiv3_operation) = {
+            operation_id: "GetHomePage";
+            parameters: {
+                parameter: {
+                    name: "home page",
+                    in: "header",
+                    schema: {
+                        schema: {
+                            type: "string";
+                        };
+                    };
+                    required: false;
+                };
+            };
+        };
+        option (micro.api.http) = { get: "/"; };
+    };
+    rpc PUSH(postBook) returns (StatusUploadedBookRsp) {
+        option (micro.openapiv3.openapiv3_operation) = {
+            operation_id: "UploadBook";
+            // parameters: {
+            //     parameter: {
+            //         name: "upload page",
+            //         in: "header",
+            //         schema: {
+            //             schema: {
+            //                 type: "string";
+            //             };
+            //         };
+            //         required: true;
+            //     };
+            // };
+        };
+        option (micro.api.http) = { post: "/push"; body: "*" };
+    };
+    rpc GET(getBookReq) returns (getBookRsp) {
+        option (micro.openapiv3.openapiv3_operation) = {
+            operation_id: "GetBook";
+            parameters: {
+                parameter: {
+                    name: "sort_type",
+                    in: "header",
+                    schema: {
+                        schema: {
+                            type: "string";
+                        };
+                    };
+                    required: false;
+                };
+            };
+        };
+    };
+};
+
+message Empty {};
+
+message getBookReq {
+    optional string book_name = 1;
+};
+
+message postBook {
+    required string book_title = 1;
+    required string author = 2;
+    required string genre = 3;
+    required string year = 4;
+    required bytes book_bytes = 5;
+}
+
+message getBookRsp {
+    string title = 1;
+    string author = 2;
+    string genre = 3;
+    string year = 4;
+};
+
+message StatusRsp {
+    string description = 1;
+    int32 code = 2;
+};
+
+message StatusUploadedBookRsp {
+    string book_id = 1;
+    int32 code = 2;
+};

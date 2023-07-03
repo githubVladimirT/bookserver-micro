@@ -72,7 +72,7 @@ type StatusUploadedBook struct {
 
 type DB struct{ db *sql.DB }
 
-func (db *DB) insertNewBook(book Book) (int, error) {
+func (db *DB) InsertNewBook(book Book) (int, error) {
 	var id int
 
 	_, err := db.db.Exec(insert_book, book.Filepath, book.Title, book.Author, book.Genre, book.Year)
@@ -111,7 +111,7 @@ func returnJSONStatusUploadedBook(w http.ResponseWriter, status string, code int
 	w.Write(marshalled)
 }
 
-func (db *DB) GET_NULL_NULL(w http.ResponseWriter) {
+func (db *DB) GetAllBooks(w http.ResponseWriter) {
 	var books []string
 
 	rows, err := db.db.Query(get_all_books)
@@ -133,26 +133,7 @@ func (db *DB) GET_NULL_NULL(w http.ResponseWriter) {
 	w.Write(marshalled)
 }
 
-func (db *DB) GET_NOTNULL_NULL(w http.ResponseWriter, book string) {
-	var title, author, genre, year string
-
-	err := db.db.QueryRow(selectdata, "books/"+book).Scan(&title, &author, &genre, &year)
-	if err != nil {
-		log.Error().Msg(err.Error())
-		log.Fatal()
-	}
-
-	mybook := ReturnBook{Title: title, Author: author, Genre: genre, Year: year}
-	marshalled, err := json.Marshal(mybook)
-	if err != nil {
-		returnJSONStatus(w, err.Error(), http.StatusBadGateway)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(marshalled)
-}
-
-func (db *DB) GET_NULL_NOTNULL(w http.ResponseWriter, sort_type string) {
+func (db *DB) GetAllBooksAndSort(w http.ResponseWriter, sort_type string) {
 	books := []ReturnBook{}
 
 	rows, err := db.db.Query(sort_query + sort_type)
@@ -174,7 +155,7 @@ func (db *DB) GET_NULL_NOTNULL(w http.ResponseWriter, sort_type string) {
 	w.Write(marshalled)
 }
 
-func PUSH_method_get(w http.ResponseWriter, r *http.Request) {
+func PUSHMethodGet(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		http.ServeFile(w, r, "./templates/push.html")
 	} else {
@@ -225,7 +206,7 @@ func (db *DB) PUSH(w http.ResponseWriter, r *http.Request) {
 		Year:     year,
 	}
 
-	book_id, err := db.insertNewBook(book)
+	book_id, err := db.InsertNewBook(book)
 	if err != nil {
 		returnJSONStatus(w, err.Error(), http.StatusBadGateway)
 		return
@@ -235,29 +216,41 @@ func (db *DB) PUSH(w http.ResponseWriter, r *http.Request) {
 }
 
 func (db *DB) GET(w http.ResponseWriter, r *http.Request) {
-	book := r.URL.Query().Get("book")
 	sort_type := r.URL.Query().Get("sort")
 
-	if book == "" && sort_type == "" {
-		// book: NULL; sort_type: NULL
-		db.GET_NULL_NULL(w)
-	} else if book != "" && sort_type == "" {
-		// book: NOT NULL; sort_type: NULL
-		db.GET_NOTNULL_NULL(w, book)
-	} else if book == "" && sort_type != "" {
-		// book: NULL; sort_type: NOT NULL
-		db.GET_NULL_NOTNULL(w, sort_type)
-	} else if book != "" && sort_type != "" {
-		// book: NOT NULL; sort_type: NOT NULL
-		returnJSONStatus(w, "invalid argument combination", http.StatusBadRequest)
+	if sort_type == "" {
+		db.GetAllBooks(w)
+	} else {
+		db.GetAllBooksAndSort(w, sort_type)
 	}
 }
 
-func HOME(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "./templates/home.html")
+func (db *DB) BOOK(w http.ResponseWriter, r *http.Request) {
+	book := r.URL.Query().Get("book")
+
+	var title, author, genre, year string
+
+	err := db.db.QueryRow(selectdata, "books/"+book).Scan(&title, &author, &genre, &year)
+	if err != nil {
+		log.Error().Msg(err.Error())
+		log.Fatal()
+	}
+
+	mybook := ReturnBook{Title: title, Author: author, Genre: genre, Year: year}
+	marshalled, err := json.Marshal(mybook)
+	if err != nil {
+		returnJSONStatus(w, err.Error(), http.StatusBadGateway)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(marshalled)
 }
 
-func get_address() string {
+func HOME(w http.ResponseWriter, r *http.Request) {
+	returnJSONStatus(w, "home page", http.StatusOK)
+}
+
+func GetAddress() string {
 	args := os.Args[1:]
 	return args[0] + ":" + args[1]
 }
@@ -266,7 +259,7 @@ func get_address() string {
 func main() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 
-	db, err := sql.Open("sqlite3", "./db/books.db")
+	db, err := sql.Open("sqlite3", "./db/sqlite3/books.db")
 	if err != nil {
 		log.Error().Msg(err.Error())
 		log.Fatal()
@@ -287,14 +280,15 @@ func main() {
 	reg := register.NewRegister()
 
 	srv := httpsrv.NewServer(
-		server.Address(get_address()),
+		server.Address(GetAddress()),
 		server.Name("bookserver"),
 		server.Register(reg),
 		httpsrv.PathHandler(http.MethodGet, "/", HOME),
 		httpsrv.PathHandler(http.MethodGet, "/books", DataBase.GET),
+		httpsrv.PathHandler(http.MethodGet, "/book", DataBase.BOOK),
 
 		httpsrv.PathHandler(http.MethodPost, "/push", DataBase.PUSH),
-		httpsrv.PathHandler(http.MethodGet, "/push", PUSH_method_get),
+		httpsrv.PathHandler(http.MethodGet, "/push", PUSHMethodGet),
 	)
 
 	svc := micro.NewService(micro.Server(srv))
