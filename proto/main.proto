@@ -10,18 +10,18 @@ service Server {
     rpc HOME(Empty) returns (StatusRsp) {
         option (micro.openapiv3.openapiv3_operation) = {
             operation_id: "GetHomePage";
-            parameters: {
-                parameter: {
-                    name: "home page",
-                    in: "header",
-                    schema: {
-                        schema: {
-                            type: "string";
-                        };
-                    };
-                    required: false;
-                };
-            };
+            // parameters: {
+            //     parameter: {
+            //         name: "home page",
+            //         in: "header",
+            //         schema: {
+            //             schema: {
+            //                 type: "string";
+            //             };
+            //         };
+            //         required: false;
+            //     };
+            // };
         };
         option (micro.api.http) = { get: "/"; };
     };
