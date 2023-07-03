@@ -1,4 +1,4 @@
-.PHONY: all clean build run
+.PHONY: all clean build run gen
 
 HOST=127.0.0.1
 PORT=8080
@@ -13,3 +13,6 @@ run:
 
 clean:
 	rm -f books/* db/books.db
+
+gen:
+	./gen.sh
