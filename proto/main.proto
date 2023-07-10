@@ -22,6 +22,11 @@ service Server {
             //         required: false;
             //     };
             // };
+            responses: {
+                default: {
+                    reference: {_ref: ".bookservermicro.StatusRsp"}
+                };
+            };
         };
         option (micro.api.http) = { get: "/"; };
     };
@@ -40,6 +45,11 @@ service Server {
             //         required: true;
             //     };
             // };
+            responses: {
+                default: {
+                    reference: {_ref: ".bookservermicro.StatusRsp"}
+                };
+            };
         };
         option (micro.api.http) = { post: "/push"; body: "*" };
     };
@@ -69,11 +79,11 @@ message getBookReq {
 };
 
 message postBook {
-    required string book_title = 1;
-    required string author = 2;
-    required string genre = 3;
-    required string year = 4;
-    required bytes book_bytes = 5;
+    string book_title = 1;
+    string author = 2;
+    string genre = 3;
+    string year = 4;
+    bytes book_bytes = 5;
 }
 
 message getBookRsp {
@@ -84,11 +94,12 @@ message getBookRsp {
 };
 
 message StatusRsp {
-    string description = 1;
-    int32 code = 2;
+    int32 code = 1;
+    string description = 2;
 };
 
 message StatusUploadedBookRsp {
     string book_id = 1;
     int32 code = 2;
 };
+
