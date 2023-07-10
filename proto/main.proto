@@ -47,27 +47,42 @@ service Server {
             // };
             responses: {
                 default: {
-                    reference: {_ref: ".bookservermicro.StatusRsp"}
+                    reference: {
+                        _ref: ".bookservermicro.StatusRsp";
+                    };
                 };
             };
         };
-        option (micro.api.http) = { post: "/push"; body: "*" };
+        option (micro.api.http) = {
+            post: "/push";
+            body: "*";
+        };
     };
     rpc GET(getBookReq) returns (getBookRsp) {
         option (micro.openapiv3.openapiv3_operation) = {
             operation_id: "GetBook";
-            parameters: {
-                parameter: {
-                    name: "sort_type",
-                    in: "header",
-                    schema: {
-                        schema: {
-                            type: "string";
-                        };
+            // parameters: {
+            //     parameter: {
+            //         name: "sort_type",
+            //         in: "header",
+            //         schema: {
+            //             schema: {
+            //                 type: "string";
+            //             };
+            //         };
+            //         required: false;
+            //     };
+            // };
+            responses: {
+                default: {
+                    reference: {
+                        _ref: ".bookservermicro.StatusRsp";
                     };
-                    required: false;
                 };
             };
+        };
+        option (micro.api.http) = {
+            get: "/push";
         };
     };
 };

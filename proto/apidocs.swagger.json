@@ -1,0 +1,116 @@
+# Generated with protoc-gen-go-micro
+
+openapi: 3.0.3
+info:
+    title: Server API
+    version: 0.0.1
+paths:
+    /:
+        get:
+            tags:
+                - Server
+            operationId: GetHomePage
+            responses:
+                default:
+                    description: Default
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/StatusRsp'
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/StatusRsp'
+    /push:
+        get:
+            tags:
+                - Server
+            operationId: GetBook
+            parameters:
+                - name: book_name
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                default:
+                    description: Default
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/StatusRsp'
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/getBookRsp'
+        post:
+            tags:
+                - Server
+            operationId: UploadBook
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/postBook'
+                required: true
+            responses:
+                default:
+                    description: Default
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/StatusRsp'
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/StatusUploadedBookRsp'
+components:
+    schemas:
+        StatusRsp:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                description:
+                    type: string
+        StatusUploadedBookRsp:
+            type: object
+            properties:
+                book_id:
+                    type: string
+                code:
+                    type: integer
+                    format: int32
+        getBookRsp:
+            type: object
+            properties:
+                title:
+                    type: string
+                author:
+                    type: string
+                genre:
+                    type: string
+                year:
+                    type: string
+        postBook:
+            type: object
+            properties:
+                book_title:
+                    type: string
+                author:
+                    type: string
+                genre:
+                    type: string
+                year:
+                    type: string
+                book_bytes:
+                    type: string
+                    format: bytes
+tags:
+    - name: Server
