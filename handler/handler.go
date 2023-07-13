@@ -12,6 +12,7 @@ import (
 
 	"github.com/blockloop/scan/v2"
 	"github.com/google/uuid"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog"
 	log "github.com/rs/zerolog/log"
 	httpsrv "go.unistack.org/micro-server-http/v3"
