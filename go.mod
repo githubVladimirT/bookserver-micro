@@ -8,6 +8,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/rs/zerolog v1.29.0
 	go.unistack.org/micro-client-http/v3 v3.9.2
+	go.unistack.org/micro-codec-json/v3 v3.10.0
 	go.unistack.org/micro-proto/v3 v3.3.1
 	go.unistack.org/micro-server-http/v3 v3.11.4
 	go.unistack.org/micro/v3 v3.10.22

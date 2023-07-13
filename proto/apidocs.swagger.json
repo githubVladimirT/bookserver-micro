@@ -23,7 +23,25 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/StatusRsp'
-    /push:
+    /allbooks:
+        get:
+            tags:
+                - Server
+            operationId: GetAllBooks
+            responses:
+                default:
+                    description: Default
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/StatusRsp'
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/getAllBooks'
+    /book:
         get:
             tags:
                 - Server
@@ -46,6 +64,30 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/getBookRsp'
+    /books:
+        get:
+            tags:
+                - Server
+            operationId: GetAllBooks
+            parameters:
+                - name: sort_type
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                default:
+                    description: Default
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/StatusRsp'
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/getAllBooksAndSort'
+    /push:
         post:
             tags:
                 - Server
@@ -68,7 +110,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/StatusUploadedBookRsp'
+                                $ref: '#/components/schemas/statusUploadedBookRsp'
 components:
     schemas:
         StatusRsp:
@@ -79,14 +121,20 @@ components:
                     format: int32
                 description:
                     type: string
-        StatusUploadedBookRsp:
+        getAllBooks:
             type: object
             properties:
-                book_id:
-                    type: string
-                code:
-                    type: integer
-                    format: int32
+                books:
+                    type: array
+                    items:
+                        type: string
+        getAllBooksAndSort:
+            type: object
+            properties:
+                book:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/getBookRsp'
         getBookRsp:
             type: object
             properties:
@@ -112,5 +160,13 @@ components:
                 book_bytes:
                     type: string
                     format: bytes
+        statusUploadedBookRsp:
+            type: object
+            properties:
+                book_id:
+                    type: string
+                code:
+                    type: integer
+                    format: int32
 tags:
     - name: Server

@@ -7,21 +7,9 @@ import "api/annotations.proto";
 import "openapiv3/annotations.proto";
 
 service Server {
-    rpc HOME(Empty) returns (StatusRsp) {
+    rpc Home(Empty) returns (StatusRsp) {
         option (micro.openapiv3.openapiv3_operation) = {
             operation_id: "GetHomePage";
-            // parameters: {
-            //     parameter: {
-            //         name: "home page",
-            //         in: "header",
-            //         schema: {
-            //             schema: {
-            //                 type: "string";
-            //             };
-            //         };
-            //         required: false;
-            //     };
-            // };
             responses: {
                 default: {
                     reference: {_ref: ".bookservermicro.StatusRsp"}
@@ -30,21 +18,9 @@ service Server {
         };
         option (micro.api.http) = { get: "/"; };
     };
-    rpc PUSH(postBook) returns (StatusUploadedBookRsp) {
+    rpc Push(postBook) returns (statusUploadedBookRsp) {
         option (micro.openapiv3.openapiv3_operation) = {
             operation_id: "UploadBook";
-            // parameters: {
-            //     parameter: {
-            //         name: "upload page",
-            //         in: "header",
-            //         schema: {
-            //             schema: {
-            //                 type: "string";
-            //             };
-            //         };
-            //         required: true;
-            //     };
-            // };
             responses: {
                 default: {
                     reference: {
@@ -58,21 +34,9 @@ service Server {
             body: "*";
         };
     };
-    rpc GET(getBookReq) returns (getBookRsp) {
+    rpc Book(getBook) returns (getBookRsp) {
         option (micro.openapiv3.openapiv3_operation) = {
             operation_id: "GetBook";
-            // parameters: {
-            //     parameter: {
-            //         name: "sort_type",
-            //         in: "header",
-            //         schema: {
-            //             schema: {
-            //                 type: "string";
-            //             };
-            //         };
-            //         required: false;
-            //     };
-            // };
             responses: {
                 default: {
                     reference: {
@@ -82,15 +46,57 @@ service Server {
             };
         };
         option (micro.api.http) = {
-            get: "/push";
+            get: "/book";
+        };
+    };
+    rpc GetAllBooks(Empty) returns (getAllBooks) {
+        option (micro.openapiv3.openapiv3_operation) = {
+            operation_id: "GetAllBooks";
+            responses: {
+                default: {
+                    reference: {
+                        _ref: ".bookservermicro.StatusRsp";
+                    };
+                };
+            };
+        };
+        option (micro.api.http) = {
+            get: "/allbooks";
+        };
+    };
+    rpc GetAllBooksAndSort(sortType) returns (getAllBooksAndSort) {
+        option (micro.openapiv3.openapiv3_operation) = {
+            operation_id: "GetAllBooks";
+            responses: {
+                default: {
+                    reference: {
+                        _ref: ".bookservermicro.StatusRsp";
+                    };
+                };
+            };
+        };
+        option (micro.api.http) = {
+            get: "/books";
         };
     };
 };
 
 message Empty {};
 
-message getBookReq {
-    optional string book_name = 1;
+message getBook {
+    string book_name = 1;
+};
+
+message sortType {
+    string sort_type = 1;
+};
+
+message getAllBooks {
+    repeated string books = 1;
+};
+
+message getAllBooksAndSort {
+    repeated getBookRsp book = 1;
 };
 
 message postBook {
@@ -113,7 +119,7 @@ message StatusRsp {
     string description = 2;
 };
 
-message StatusUploadedBookRsp {
+message statusUploadedBookRsp {
     string book_id = 1;
     int32 code = 2;
 };

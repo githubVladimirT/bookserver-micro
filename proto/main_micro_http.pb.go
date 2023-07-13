@@ -22,7 +22,7 @@ func NewServerClient(name string, c client.Client) ServerClient {
 	return &serverClient{c: c, name: name}
 }
 
-func (c *serverClient) HOME(ctx context.Context, req *Empty, opts ...client.CallOption) (*StatusRsp, error) {
+func (c *serverClient) Home(ctx context.Context, req *Empty, opts ...client.CallOption) (*StatusRsp, error) {
 	errmap := make(map[string]interface{}, 1)
 	errmap["default"] = &StatusRsp{}
 	opts = append(opts,
@@ -33,14 +33,14 @@ func (c *serverClient) HOME(ctx context.Context, req *Empty, opts ...client.Call
 		v3.Path("/"),
 	)
 	rsp := &StatusRsp{}
-	err := c.c.Call(ctx, c.c.NewRequest(c.name, "Server.HOME", req), rsp, opts...)
+	err := c.c.Call(ctx, c.c.NewRequest(c.name, "Server.Home", req), rsp, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return rsp, nil
 }
 
-func (c *serverClient) PUSH(ctx context.Context, req *PostBook, opts ...client.CallOption) (*StatusUploadedBookRsp, error) {
+func (c *serverClient) Push(ctx context.Context, req *PostBook, opts ...client.CallOption) (*StatusUploadedBookRsp, error) {
 	errmap := make(map[string]interface{}, 1)
 	errmap["default"] = &StatusRsp{}
 	opts = append(opts,
@@ -52,14 +52,14 @@ func (c *serverClient) PUSH(ctx context.Context, req *PostBook, opts ...client.C
 		v3.Body("*"),
 	)
 	rsp := &StatusUploadedBookRsp{}
-	err := c.c.Call(ctx, c.c.NewRequest(c.name, "Server.PUSH", req), rsp, opts...)
+	err := c.c.Call(ctx, c.c.NewRequest(c.name, "Server.Push", req), rsp, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return rsp, nil
 }
 
-func (c *serverClient) GET(ctx context.Context, req *GetBookReq, opts ...client.CallOption) (*GetBookRsp, error) {
+func (c *serverClient) Book(ctx context.Context, req *GetBook, opts ...client.CallOption) (*GetBookRsp, error) {
 	errmap := make(map[string]interface{}, 1)
 	errmap["default"] = &StatusRsp{}
 	opts = append(opts,
@@ -67,10 +67,46 @@ func (c *serverClient) GET(ctx context.Context, req *GetBookReq, opts ...client.
 	)
 	opts = append(opts,
 		v3.Method(http.MethodGet),
-		v3.Path("/push"),
+		v3.Path("/book"),
 	)
 	rsp := &GetBookRsp{}
-	err := c.c.Call(ctx, c.c.NewRequest(c.name, "Server.GET", req), rsp, opts...)
+	err := c.c.Call(ctx, c.c.NewRequest(c.name, "Server.Book", req), rsp, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return rsp, nil
+}
+
+func (c *serverClient) GetAllBooks(ctx context.Context, req *Empty, opts ...client.CallOption) (*GetAllBooks, error) {
+	errmap := make(map[string]interface{}, 1)
+	errmap["default"] = &StatusRsp{}
+	opts = append(opts,
+		v3.ErrorMap(errmap),
+	)
+	opts = append(opts,
+		v3.Method(http.MethodGet),
+		v3.Path("/allbooks"),
+	)
+	rsp := &GetAllBooks{}
+	err := c.c.Call(ctx, c.c.NewRequest(c.name, "Server.GetAllBooks", req), rsp, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return rsp, nil
+}
+
+func (c *serverClient) GetAllBooksAndSort(ctx context.Context, req *SortType, opts ...client.CallOption) (*GetAllBooksAndSort, error) {
+	errmap := make(map[string]interface{}, 1)
+	errmap["default"] = &StatusRsp{}
+	opts = append(opts,
+		v3.ErrorMap(errmap),
+	)
+	opts = append(opts,
+		v3.Method(http.MethodGet),
+		v3.Path("/books"),
+	)
+	rsp := &GetAllBooksAndSort{}
+	err := c.c.Call(ctx, c.c.NewRequest(c.name, "Server.GetAllBooksAndSort", req), rsp, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -81,23 +117,33 @@ type serverServer struct {
 	ServerServer
 }
 
-func (h *serverServer) HOME(ctx context.Context, req *Empty, rsp *StatusRsp) error {
-	return h.ServerServer.HOME(ctx, req, rsp)
+func (h *serverServer) Home(ctx context.Context, req *Empty, rsp *StatusRsp) error {
+	return h.ServerServer.Home(ctx, req, rsp)
 }
 
-func (h *serverServer) PUSH(ctx context.Context, req *PostBook, rsp *StatusUploadedBookRsp) error {
-	return h.ServerServer.PUSH(ctx, req, rsp)
+func (h *serverServer) Push(ctx context.Context, req *PostBook, rsp *StatusUploadedBookRsp) error {
+	return h.ServerServer.Push(ctx, req, rsp)
 }
 
-func (h *serverServer) GET(ctx context.Context, req *GetBookReq, rsp *GetBookRsp) error {
-	return h.ServerServer.GET(ctx, req, rsp)
+func (h *serverServer) Book(ctx context.Context, req *GetBook, rsp *GetBookRsp) error {
+	return h.ServerServer.Book(ctx, req, rsp)
+}
+
+func (h *serverServer) GetAllBooks(ctx context.Context, req *Empty, rsp *GetAllBooks) error {
+	return h.ServerServer.GetAllBooks(ctx, req, rsp)
+}
+
+func (h *serverServer) GetAllBooksAndSort(ctx context.Context, req *SortType, rsp *GetAllBooksAndSort) error {
+	return h.ServerServer.GetAllBooksAndSort(ctx, req, rsp)
 }
 
 func RegisterServerServer(s server.Server, sh ServerServer, opts ...server.HandlerOption) error {
 	type server interface {
-		HOME(ctx context.Context, req *Empty, rsp *StatusRsp) error
-		PUSH(ctx context.Context, req *PostBook, rsp *StatusUploadedBookRsp) error
-		GET(ctx context.Context, req *GetBookReq, rsp *GetBookRsp) error
+		Home(ctx context.Context, req *Empty, rsp *StatusRsp) error
+		Push(ctx context.Context, req *PostBook, rsp *StatusUploadedBookRsp) error
+		Book(ctx context.Context, req *GetBook, rsp *GetBookRsp) error
+		GetAllBooks(ctx context.Context, req *Empty, rsp *GetAllBooks) error
+		GetAllBooksAndSort(ctx context.Context, req *SortType, rsp *GetAllBooksAndSort) error
 	}
 	type Server struct {
 		server

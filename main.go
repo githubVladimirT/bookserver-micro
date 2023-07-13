@@ -1,299 +1,54 @@
 package main
 
 import (
-	"encoding/json"
+	"bookserver-micro/handler"
+	pb "bookserver-micro/proto"
+	"context"
 	"fmt"
-	"io"
-
 	"os"
-
-	"strconv"
-
-	"database/sql"
-	"net/http"
-
-	"github.com/blockloop/scan/v2"
-	uuid "github.com/google/uuid"
-	_ "github.com/mattn/go-sqlite3"
-	"github.com/rs/zerolog"
-	log "github.com/rs/zerolog/log"
 
 	httpsrv "go.unistack.org/micro-server-http/v3"
 	"go.unistack.org/micro/v3"
-	"go.unistack.org/micro/v3/register"
+
 	"go.unistack.org/micro/v3/server"
+
+	jsoncodec "go.unistack.org/micro-codec-json/v3"
+	"go.unistack.org/micro/v3/logger"
 )
-
-// DB Queries
-const (
-	create_table = `
-	CREATE TABLE IF NOT EXISTS "books" (
-		"id"		INTEGER,
-		"filepath"	TEXT NOT NULL,
-		"title"		TEXT NOT NULL,
-		"author"	TEXT NOT NULL,
-		"genre"		TEXT NOT NULL,
-		"year"		TEXT NOT NULL,
-		PRIMARY 	KEY("id" AUTOINCREMENT)
-	);
-	`
-
-	insert_book            = `INSERT INTO books VALUES(NULL, ?, ?, ?, ?, ?);`
-	selectid_insertNewBook = `SELECT "id" FROM books WHERE filepath=$1`
-	selectdata             = `SELECT "title", "author", "genre", "year" FROM "books" WHERE filepath=$1`
-	sort_query             = `SELECT * FROM books ORDER BY `
-	get_all_books          = `SELECT title FROM books;`
-)
-
-type Book struct {
-	Filepath string `json:"filepath"`
-	Title    string `json:"title"`
-	Author   string `json:"author"`
-	Genre    string `json:"genre"`
-	Year     string `json:"year"`
-}
-
-type ReturnBook struct {
-	Title  string `json:"title"`
-	Author string `json:"author"`
-	Genre  string `json:"genre"`
-	Year   string `json:"year"`
-}
-
-type Status struct {
-	Description string `json:"error"`
-	Code        int    `json:"code"`
-}
-
-type StatusUploadedBook struct {
-	Description string `json:"bookid"`
-	Code        int    `json:"code"`
-}
-
-type DB struct{ db *sql.DB }
-
-func (db *DB) InsertNewBook(book Book) (int, error) {
-	var id int
-
-	_, err := db.db.Exec(insert_book, book.Filepath, book.Title, book.Author, book.Genre, book.Year)
-	if err != nil {
-		return -1, err
-	}
-
-	err = db.db.QueryRow(selectid_insertNewBook, book.Filepath).Scan(&id)
-	if err != nil {
-		return -1, err
-	}
-
-	return id, nil
-}
-
-// TODO: следующие функции имеют схожий функционал
-func returnJSONStatus(w http.ResponseWriter, status string, code int) {
-	text_error := Status{Description: status, Code: code}
-	marshalled, err := json.Marshal(text_error)
-	if err != nil {
-		fmt.Fprint(w, err.Error())
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(marshalled)
-}
-
-func returnJSONStatusUploadedBook(w http.ResponseWriter, status string, code int) {
-	text_error := StatusUploadedBook{Description: status, Code: code}
-	marshalled, err := json.Marshal(text_error)
-	if err != nil {
-		fmt.Fprint(w, err.Error())
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(marshalled)
-}
-
-func (db *DB) GetAllBooks(w http.ResponseWriter) {
-	var books []string
-
-	rows, err := db.db.Query(get_all_books)
-	if err != nil {
-		returnJSONStatus(w, err.Error(), http.StatusBadRequest)
-	}
-
-	err = scan.Rows(&books, rows)
-	if err != nil {
-		returnJSONStatus(w, err.Error(), http.StatusBadRequest)
-	}
-
-	marshalled, err := json.Marshal(books)
-	if err != nil {
-		returnJSONStatus(w, err.Error(), http.StatusBadGateway)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(marshalled)
-}
-
-func (db *DB) GetAllBooksAndSort(w http.ResponseWriter, sort_type string) {
-	books := []ReturnBook{}
-
-	rows, err := db.db.Query(sort_query + sort_type)
-	if err != nil {
-		returnJSONStatus(w, err.Error(), http.StatusBadRequest)
-	}
-
-	err = scan.Rows(&books, rows)
-	if err != nil {
-		returnJSONStatus(w, err.Error(), http.StatusBadRequest)
-	}
-
-	marshalled, err := json.Marshal(books)
-	if err != nil {
-		returnJSONStatus(w, err.Error(), http.StatusBadGateway)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(marshalled)
-}
-
-func PUSHMethodGet(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" {
-		http.ServeFile(w, r, "./templates/push.html")
-	} else {
-		returnJSONStatus(w, "invalid method", http.StatusBadGateway)
-	}
-}
-
-func (db *DB) PUSH(w http.ResponseWriter, r *http.Request) {
-	r.ParseMultipartForm(10 << 20)
-
-	file, handler, err := r.FormFile("book")
-	if err != nil {
-		returnJSONStatus(w, err.Error(), http.StatusBadGateway)
-		return
-	}
-
-	book_title := r.FormValue("book_title")
-	author := r.FormValue("author")
-	genre := r.FormValue("genre")
-	year := r.FormValue("year")
-
-	defer file.Close()
-
-	filename := uuid.New().String()
-
-	log.Info().Msg("--| New file |--")
-	log.Info().Msg("Uploaded File: " + filename)
-	log.Info().Msg("File Size: " + strconv.Itoa(int(handler.Size)))
-
-	bookFile, err := os.CreateTemp("books", filename+"-*.pdf")
-	if err != nil {
-		returnJSONStatus(w, err.Error(), http.StatusBadGateway)
-		return
-	}
-	defer bookFile.Close()
-
-	_, err = io.Copy(bookFile, file)
-	if err != nil {
-		returnJSONStatus(w, err.Error(), http.StatusBadGateway)
-		return
-	}
-
-	book := Book{
-		Filepath: bookFile.Name(),
-		Title:    book_title,
-		Author:   author,
-		Genre:    genre,
-		Year:     year,
-	}
-
-	book_id, err := db.InsertNewBook(book)
-	if err != nil {
-		returnJSONStatus(w, err.Error(), http.StatusBadGateway)
-		return
-	}
-
-	returnJSONStatusUploadedBook(w, strconv.Itoa(book_id), http.StatusCreated)
-}
-
-func (db *DB) GET(w http.ResponseWriter, r *http.Request) {
-	sort_type := r.URL.Query().Get("sort")
-
-	if sort_type == "" {
-		db.GetAllBooks(w)
-	} else {
-		db.GetAllBooksAndSort(w, sort_type)
-	}
-}
-
-func (db *DB) BOOK(w http.ResponseWriter, r *http.Request) {
-	book := r.URL.Query().Get("book")
-
-	var title, author, genre, year string
-
-	err := db.db.QueryRow(selectdata, "books/"+book).Scan(&title, &author, &genre, &year)
-	if err != nil {
-		log.Error().Msg(err.Error())
-		log.Fatal()
-	}
-
-	mybook := ReturnBook{Title: title, Author: author, Genre: genre, Year: year}
-	marshalled, err := json.Marshal(mybook)
-	if err != nil {
-		returnJSONStatus(w, err.Error(), http.StatusBadGateway)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(marshalled)
-}
-
-func HOME(w http.ResponseWriter, r *http.Request) {
-	returnJSONStatus(w, "home page", http.StatusOK)
-}
-
-func GetAddress() string {
-	args := os.Args[1:]
-	return args[0] + ":" + args[1]
-}
 
 // <----| MAIN FUNC |---->
 func main() {
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-
-	db, err := sql.Open("sqlite3", "./db/sqlite3/books.db")
-	if err != nil {
-		log.Error().Msg(err.Error())
-		log.Fatal()
-	}
-
-	defer db.Close()
-
-	_, err = db.Exec(create_table)
-	if err != nil {
-		log.Error().Msg(err.Error())
-		log.Fatal()
-	}
-
 	fmt.Fprintln(os.Stderr, "<----|   started   |---->")
 
-	DataBase := &DB{db: db}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	reg := register.NewRegister()
-
-	srv := httpsrv.NewServer(
-		server.Address(GetAddress()),
-		server.Name("bookserver"),
-		server.Register(reg),
-		httpsrv.PathHandler(http.MethodGet, "/", HOME),
-		httpsrv.PathHandler(http.MethodGet, "/books", DataBase.GET),
-		httpsrv.PathHandler(http.MethodGet, "/book", DataBase.BOOK),
-
-		httpsrv.PathHandler(http.MethodPost, "/push", DataBase.PUSH),
-		httpsrv.PathHandler(http.MethodGet, "/push", PUSHMethodGet),
+	options := append([]micro.Option{},
+		micro.Server(httpsrv.NewServer(
+			server.Name("bookserver-micro"),
+			server.Version("1.0"),
+			server.Address(":8080"),
+			server.Context(ctx),
+			server.Codec("application/json", jsoncodec.NewCodec()),
+		)),
+		micro.Context(ctx),
 	)
 
-	svc := micro.NewService(micro.Server(srv))
-	svc.Init()
-	svc.Run()
+	srv := micro.NewService(options...)
+
+	if err := srv.Init(); err != nil {
+		logger.Fatal(ctx, err)
+	}
+
+	eh := handler.NewServerHandler()
+
+	if err := pb.RegisterServerServer(srv.Server(), eh); err != nil {
+		logger.Fatal(ctx, err)
+	}
+
+	if err := srv.Run(); err != nil {
+		logger.Fatal(ctx, err)
+	}
 
 	fmt.Fprintln(os.Stderr, "<----| interrupted |---->")
 }

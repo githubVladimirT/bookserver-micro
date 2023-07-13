@@ -18,22 +18,36 @@ var (
 var (
 	ServerServerEndpoints = []v3.EndpointMetadata{
 		{
-			Name:   "Server.HOME",
+			Name:   "Server.Home",
 			Path:   "/",
 			Method: "GET",
 			Body:   "",
 			Stream: false,
 		},
 		{
-			Name:   "Server.PUSH",
+			Name:   "Server.Push",
 			Path:   "/push",
 			Method: "POST",
 			Body:   "*",
 			Stream: false,
 		},
 		{
-			Name:   "Server.GET",
-			Path:   "/push",
+			Name:   "Server.Book",
+			Path:   "/book",
+			Method: "GET",
+			Body:   "",
+			Stream: false,
+		},
+		{
+			Name:   "Server.GetAllBooks",
+			Path:   "/allbooks",
+			Method: "GET",
+			Body:   "",
+			Stream: false,
+		},
+		{
+			Name:   "Server.GetAllBooksAndSort",
+			Path:   "/books",
 			Method: "GET",
 			Body:   "",
 			Stream: false,
@@ -42,13 +56,17 @@ var (
 )
 
 type ServerClient interface {
-	HOME(ctx context.Context, req *Empty, opts ...client.CallOption) (*StatusRsp, error)
-	PUSH(ctx context.Context, req *PostBook, opts ...client.CallOption) (*StatusUploadedBookRsp, error)
-	GET(ctx context.Context, req *GetBookReq, opts ...client.CallOption) (*GetBookRsp, error)
+	Home(ctx context.Context, req *Empty, opts ...client.CallOption) (*StatusRsp, error)
+	Push(ctx context.Context, req *PostBook, opts ...client.CallOption) (*StatusUploadedBookRsp, error)
+	Book(ctx context.Context, req *GetBook, opts ...client.CallOption) (*GetBookRsp, error)
+	GetAllBooks(ctx context.Context, req *Empty, opts ...client.CallOption) (*GetAllBooks, error)
+	GetAllBooksAndSort(ctx context.Context, req *SortType, opts ...client.CallOption) (*GetAllBooksAndSort, error)
 }
 
 type ServerServer interface {
-	HOME(ctx context.Context, req *Empty, rsp *StatusRsp) error
-	PUSH(ctx context.Context, req *PostBook, rsp *StatusUploadedBookRsp) error
-	GET(ctx context.Context, req *GetBookReq, rsp *GetBookRsp) error
+	Home(ctx context.Context, req *Empty, rsp *StatusRsp) error
+	Push(ctx context.Context, req *PostBook, rsp *StatusUploadedBookRsp) error
+	Book(ctx context.Context, req *GetBook, rsp *GetBookRsp) error
+	GetAllBooks(ctx context.Context, req *Empty, rsp *GetAllBooks) error
+	GetAllBooksAndSort(ctx context.Context, req *SortType, rsp *GetAllBooksAndSort) error
 }
