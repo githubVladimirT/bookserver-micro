@@ -6,7 +6,7 @@ option go_package = "example.org/bookservermicro;pb";
 import "api/annotations.proto";
 import "openapiv3/annotations.proto";
 
-service Server {
+service BookServer {
     rpc Home(Empty) returns (StatusRsp) {
         option (micro.openapiv3.openapiv3_operation) = {
             operation_id: "GetHomePage";

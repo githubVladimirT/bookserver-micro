@@ -13,40 +13,40 @@ import (
 )
 
 var (
-	ServerName = "Server"
+	BookServerName = "BookServer"
 )
 var (
-	ServerServerEndpoints = []v3.EndpointMetadata{
+	BookServerServerEndpoints = []v3.EndpointMetadata{
 		{
-			Name:   "Server.Home",
+			Name:   "BookServer.Home",
 			Path:   "/",
 			Method: "GET",
 			Body:   "",
 			Stream: false,
 		},
 		{
-			Name:   "Server.Push",
+			Name:   "BookServer.Push",
 			Path:   "/push",
 			Method: "POST",
 			Body:   "*",
 			Stream: false,
 		},
 		{
-			Name:   "Server.Book",
+			Name:   "BookServer.Book",
 			Path:   "/book",
 			Method: "GET",
 			Body:   "",
 			Stream: false,
 		},
 		{
-			Name:   "Server.GetAllBooks",
+			Name:   "BookServer.GetAllBooks",
 			Path:   "/allbooks",
 			Method: "GET",
 			Body:   "",
 			Stream: false,
 		},
 		{
-			Name:   "Server.GetAllBooksAndSort",
+			Name:   "BookServer.GetAllBooksAndSort",
 			Path:   "/books",
 			Method: "GET",
 			Body:   "",
@@ -55,7 +55,7 @@ var (
 	}
 )
 
-type ServerClient interface {
+type BookServerClient interface {
 	Home(ctx context.Context, req *Empty, opts ...client.CallOption) (*StatusRsp, error)
 	Push(ctx context.Context, req *PostBook, opts ...client.CallOption) (*StatusUploadedBookRsp, error)
 	Book(ctx context.Context, req *GetBook, opts ...client.CallOption) (*GetBookRsp, error)
@@ -63,7 +63,7 @@ type ServerClient interface {
 	GetAllBooksAndSort(ctx context.Context, req *SortType, opts ...client.CallOption) (*GetAllBooksAndSort, error)
 }
 
-type ServerServer interface {
+type BookServerServer interface {
 	Home(ctx context.Context, req *Empty, rsp *StatusRsp) error
 	Push(ctx context.Context, req *PostBook, rsp *StatusUploadedBookRsp) error
 	Book(ctx context.Context, req *GetBook, rsp *GetBookRsp) error

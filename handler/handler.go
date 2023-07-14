@@ -55,7 +55,7 @@ type Book struct {
 }
 
 // <!--- INIT DATABASE --->
-func initDB() {
+func InitDB() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 
 	db, err := sql.Open("sqlite3", "./db/sqlite3/books.db")

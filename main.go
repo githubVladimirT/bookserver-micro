@@ -20,6 +20,8 @@ import (
 func main() {
 	fmt.Fprintln(os.Stderr, "<----|   started   |---->")
 
+	handler.InitDB()
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -42,7 +44,7 @@ func main() {
 
 	eh := handler.NewServerHandler()
 
-	if err := pb.RegisterServerServer(srv.Server(), eh); err != nil {
+	if err := pb.RegisterBookServerServer(srv.Server(), eh); err != nil {
 		logger.Fatal(ctx, err)
 	}
 

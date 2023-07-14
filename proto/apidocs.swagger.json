@@ -2,13 +2,13 @@
 
 openapi: 3.0.3
 info:
-    title: Server API
+    title: BookServer API
     version: 0.0.1
 paths:
     /:
         get:
             tags:
-                - Server
+                - BookServer
             operationId: GetHomePage
             responses:
                 default:
@@ -26,7 +26,7 @@ paths:
     /allbooks:
         get:
             tags:
-                - Server
+                - BookServer
             operationId: GetAllBooks
             responses:
                 default:
@@ -44,7 +44,7 @@ paths:
     /book:
         get:
             tags:
-                - Server
+                - BookServer
             operationId: GetBook
             parameters:
                 - name: book_name
@@ -67,7 +67,7 @@ paths:
     /books:
         get:
             tags:
-                - Server
+                - BookServer
             operationId: GetAllBooks
             parameters:
                 - name: sort_type
@@ -90,7 +90,7 @@ paths:
     /push:
         post:
             tags:
-                - Server
+                - BookServer
             operationId: UploadBook
             requestBody:
                 content:
@@ -169,4 +169,4 @@ components:
                     type: integer
                     format: int32
 tags:
-    - name: Server
+    - name: BookServer
