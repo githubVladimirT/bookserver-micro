@@ -20,10 +20,13 @@ import (
 func main() {
 	fmt.Fprintln(os.Stderr, "<----|   started   |---->")
 
-	handler.InitDB()
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	err := handler.InitDB()
+	if err != nil {
+		logger.Fatal(ctx, err)
+	}
 
 	options := append([]micro.Option{},
 		micro.Server(httpsrv.NewServer(
@@ -33,6 +36,7 @@ func main() {
 			server.Context(ctx),
 			server.Codec("application/json", jsoncodec.NewCodec()),
 		)),
+
 		micro.Context(ctx),
 	)
 

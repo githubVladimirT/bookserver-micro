@@ -55,22 +55,22 @@ type Book struct {
 }
 
 // <!--- INIT DATABASE --->
-func InitDB() {
+func InitDB() error {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 
-	db, err := sql.Open("sqlite3", "./db/sqlite3/books.db")
+	db, err := sql.Open("sqlite3", "../db/sqlite3/books.db")
 	if err != nil {
-		log.Error().Msg(err.Error())
-		log.Fatal()
+		return err
 	}
 
 	defer db.Close()
 
 	_, err = db.Exec(create_table)
 	if err != nil {
-		log.Error().Msg(err.Error())
-		log.Fatal()
+		return err
 	}
+
+	return nil
 }
 
 type ServerHandler struct {
