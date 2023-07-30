@@ -1,8 +1,8 @@
 package main
 
 import (
-	"bookserver-micro/handler"
-	pb "bookserver-micro/proto"
+	"bookserver-micro-server/handler"
+	pb "bookserver-micro-server/proto"
 	"context"
 	"fmt"
 	"os"

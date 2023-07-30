@@ -1,4 +1,4 @@
-module bookserver-micro
+module bookserver-micro-server
 
 go 1.20
 
