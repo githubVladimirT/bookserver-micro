@@ -47,7 +47,7 @@ paths:
                 - BookServer
             operationId: GetBook
             parameters:
-                - name: book_name
+                - name: book_title
                   in: query
                   schema:
                     type: string
@@ -116,9 +116,6 @@ components:
         StatusRsp:
             type: object
             properties:
-                code:
-                    type: integer
-                    format: int32
                 description:
                     type: string
         getAllBooks:
@@ -131,7 +128,7 @@ components:
         getAllBooksAndSort:
             type: object
             properties:
-                book:
+                books:
                     type: array
                     items:
                         $ref: '#/components/schemas/getBookRsp'
@@ -165,8 +162,5 @@ components:
             properties:
                 book_id:
                     type: string
-                code:
-                    type: integer
-                    format: int32
 tags:
     - name: BookServer

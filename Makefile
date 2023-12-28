@@ -9,7 +9,7 @@ build:
 	go build .
 
 run:
-	./bookserver $(HOST) $(PORT)
+	./bookserver-micro $(HOST) $(PORT)
 
 clean:
 	rm -f books/* db/books.db

@@ -1,4 +1,4 @@
-module bookserver-micro-server
+module github.com/githubVladimirT/bookserver-micro
 
 go 1.20
 
@@ -12,6 +12,7 @@ require (
 	go.unistack.org/micro-proto/v3 v3.3.1
 	go.unistack.org/micro-server-http/v3 v3.11.4
 	go.unistack.org/micro/v3 v3.10.22
+	golang.org/x/exp v0.0.0-20230809094429-853ea248256d
 	google.golang.org/protobuf v1.28.1
 )
 
