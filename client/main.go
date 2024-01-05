@@ -116,10 +116,8 @@ func HomeTest() {
 
 	mc := pb.NewBookServerClient("bookserver-micro-client", cli)
 
-	req := &pb.Empty{}	
+	req := &pb.Empty{}
 	rsp, err := mc.Home(context.TODO(), req)
-	logger.Info(context.TODO(), cli.Options().ContentType)
-
 	if err != nil {
 		logger.Error(context.TODO(), err)
 		return
