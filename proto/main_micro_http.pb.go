@@ -6,11 +6,51 @@ package pb
 
 import (
 	context "context"
-	v3 "go.unistack.org/micro-client-http/v3"
-	v31 "go.unistack.org/micro-server-http/v3"
+	v31 "go.unistack.org/micro-client-http/v3"
+	v3 "go.unistack.org/micro-server-http/v3"
 	client "go.unistack.org/micro/v3/client"
 	server "go.unistack.org/micro/v3/server"
 	http "net/http"
+)
+
+var (
+	BookServerServerEndpoints = []v3.EndpointMetadata{
+		{
+			Name:   "BookServer.Home",
+			Path:   "/",
+			Method: "GET",
+			Body:   "",
+			Stream: false,
+		},
+		{
+			Name:   "BookServer.Push",
+			Path:   "/push",
+			Method: "POST",
+			Body:   "*",
+			Stream: false,
+		},
+		{
+			Name:   "BookServer.Book",
+			Path:   "/book",
+			Method: "GET",
+			Body:   "",
+			Stream: false,
+		},
+		{
+			Name:   "BookServer.GetAllBooks",
+			Path:   "/allbooks",
+			Method: "GET",
+			Body:   "",
+			Stream: false,
+		},
+		{
+			Name:   "BookServer.GetAllBooksAndSort",
+			Path:   "/books",
+			Method: "GET",
+			Body:   "",
+			Stream: false,
+		},
+	}
 )
 
 type bookServerClient struct {
@@ -23,14 +63,9 @@ func NewBookServerClient(name string, c client.Client) BookServerClient {
 }
 
 func (c *bookServerClient) Home(ctx context.Context, req *Empty, opts ...client.CallOption) (*StatusRsp, error) {
-	errmap := make(map[string]interface{}, 1)
-	errmap["default"] = &StatusRsp{}
 	opts = append(opts,
-		v3.ErrorMap(errmap),
-	)
-	opts = append(opts,
-		v3.Method(http.MethodGet),
-		v3.Path("/"),
+		v31.Method(http.MethodGet),
+		v31.Path("/"),
 	)
 	rsp := &StatusRsp{}
 	err := c.c.Call(ctx, c.c.NewRequest(c.name, "BookServer.Home", req), rsp, opts...)
@@ -41,15 +76,10 @@ func (c *bookServerClient) Home(ctx context.Context, req *Empty, opts ...client.
 }
 
 func (c *bookServerClient) Push(ctx context.Context, req *PostBook, opts ...client.CallOption) (*StatusUploadedBookRsp, error) {
-	errmap := make(map[string]interface{}, 1)
-	errmap["default"] = &StatusRsp{}
 	opts = append(opts,
-		v3.ErrorMap(errmap),
-	)
-	opts = append(opts,
-		v3.Method(http.MethodPost),
-		v3.Path("/push"),
-		v3.Body("*"),
+		v31.Method(http.MethodPost),
+		v31.Path("/push"),
+		v31.Body("*"),
 	)
 	rsp := &StatusUploadedBookRsp{}
 	err := c.c.Call(ctx, c.c.NewRequest(c.name, "BookServer.Push", req), rsp, opts...)
@@ -60,14 +90,9 @@ func (c *bookServerClient) Push(ctx context.Context, req *PostBook, opts ...clie
 }
 
 func (c *bookServerClient) Book(ctx context.Context, req *GetBook, opts ...client.CallOption) (*GetBookRsp, error) {
-	errmap := make(map[string]interface{}, 1)
-	errmap["default"] = &StatusRsp{}
 	opts = append(opts,
-		v3.ErrorMap(errmap),
-	)
-	opts = append(opts,
-		v3.Method(http.MethodGet),
-		v3.Path("/book"),
+		v31.Method(http.MethodGet),
+		v31.Path("/book"),
 	)
 	rsp := &GetBookRsp{}
 	err := c.c.Call(ctx, c.c.NewRequest(c.name, "BookServer.Book", req), rsp, opts...)
@@ -78,14 +103,9 @@ func (c *bookServerClient) Book(ctx context.Context, req *GetBook, opts ...clien
 }
 
 func (c *bookServerClient) GetAllBooks(ctx context.Context, req *Empty, opts ...client.CallOption) (*GetAllBooks, error) {
-	errmap := make(map[string]interface{}, 1)
-	errmap["default"] = &StatusRsp{}
 	opts = append(opts,
-		v3.ErrorMap(errmap),
-	)
-	opts = append(opts,
-		v3.Method(http.MethodGet),
-		v3.Path("/allbooks"),
+		v31.Method(http.MethodGet),
+		v31.Path("/allbooks"),
 	)
 	rsp := &GetAllBooks{}
 	err := c.c.Call(ctx, c.c.NewRequest(c.name, "BookServer.GetAllBooks", req), rsp, opts...)
@@ -96,14 +116,9 @@ func (c *bookServerClient) GetAllBooks(ctx context.Context, req *Empty, opts ...
 }
 
 func (c *bookServerClient) GetAllBooksAndSort(ctx context.Context, req *SortType, opts ...client.CallOption) (*GetAllBooksAndSort, error) {
-	errmap := make(map[string]interface{}, 1)
-	errmap["default"] = &StatusRsp{}
 	opts = append(opts,
-		v3.ErrorMap(errmap),
-	)
-	opts = append(opts,
-		v3.Method(http.MethodGet),
-		v3.Path("/books"),
+		v31.Method(http.MethodGet),
+		v31.Path("/books"),
 	)
 	rsp := &GetAllBooksAndSort{}
 	err := c.c.Call(ctx, c.c.NewRequest(c.name, "BookServer.GetAllBooksAndSort", req), rsp, opts...)
@@ -150,6 +165,6 @@ func RegisterBookServerServer(s server.Server, sh BookServerServer, opts ...serv
 	}
 	h := &bookServerServer{sh}
 	var nopts []server.HandlerOption
-	nopts = append(nopts, v31.HandlerEndpoints(BookServerServerEndpoints))
+	nopts = append(nopts, v3.HandlerEndpoints(BookServerServerEndpoints))
 	return s.Handle(s.NewHandler(&BookServer{h}, append(nopts, opts...)...))
 }

@@ -9,14 +9,8 @@ paths:
         get:
             tags:
                 - BookServer
-            operationId: GetHomePage
+            operationId: Home
             responses:
-                default:
-                    description: Default
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/StatusRsp'
                 "200":
                     description: OK
                     content:
@@ -29,12 +23,6 @@ paths:
                 - BookServer
             operationId: GetAllBooks
             responses:
-                default:
-                    description: Default
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/StatusRsp'
                 "200":
                     description: OK
                     content:
@@ -45,19 +33,13 @@ paths:
         get:
             tags:
                 - BookServer
-            operationId: GetBook
+            operationId: Book
             parameters:
                 - name: book_title
                   in: query
                   schema:
                     type: string
             responses:
-                default:
-                    description: Default
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/StatusRsp'
                 "200":
                     description: OK
                     content:
@@ -68,19 +50,13 @@ paths:
         get:
             tags:
                 - BookServer
-            operationId: GetAllBooks
+            operationId: GetAllBooksAndSort
             parameters:
                 - name: sort_type
                   in: query
                   schema:
                     type: string
             responses:
-                default:
-                    description: Default
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/StatusRsp'
                 "200":
                     description: OK
                     content:
@@ -91,7 +67,7 @@ paths:
         post:
             tags:
                 - BookServer
-            operationId: UploadBook
+            operationId: BookServer_Push
             requestBody:
                 content:
                     application/json:
@@ -99,12 +75,6 @@ paths:
                             $ref: '#/components/schemas/postBook'
                 required: true
             responses:
-                default:
-                    description: Default
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/StatusRsp'
                 "200":
                     description: OK
                     content:
