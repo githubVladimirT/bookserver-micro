@@ -62,7 +62,7 @@ type ServerHandler struct {
 
 // <!--- INIT DATABASE --->
 func InitDB() *sql.DB {
-	db, err := sql.Open("sqlite3", "/home/vladimir/vladimir/prof/work/books-micro/db/sqlite3/books.db")
+	db, err := sql.Open("sqlite3", "books.db")
 	if err != nil {
 		panic(err)
 	}

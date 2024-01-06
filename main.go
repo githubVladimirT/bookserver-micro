@@ -15,7 +15,7 @@ import (
 	"go.unistack.org/micro/v3/client"
 	"go.unistack.org/micro/v3/server"
 
-	jsoncodec "go.unistack.org/micro-codec-json/v3"
+	jsonpbcodec "go.unistack.org/micro-codec-jsonpb/v3"
 	"go.unistack.org/micro/v3/logger"
 )
 
@@ -31,13 +31,13 @@ func main() {
 			server.Version("1.0"),
 			server.Address(":8080"),
 			server.Context(ctx),
-			server.Codec("application/json", jsoncodec.NewCodec()),
+			server.Codec("application/json", jsonpbcodec.NewCodec()),
 		)),
 
 		micro.Client(mhttp.NewClient(
 			client.Name("bookserver-micro-client"),
 			client.Context(ctx),
-			client.Codec("application/json", jsoncodec.NewCodec()),
+			client.Codec("application/json", jsonpbcodec.NewCodec()),
 			client.ContentType("application/json"),
 		)),
 

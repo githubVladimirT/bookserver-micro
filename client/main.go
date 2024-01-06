@@ -6,9 +6,9 @@ import (
 	pb "github.com/githubVladimirT/bookserver-micro/proto"
 
 	mhttp "go.unistack.org/micro-client-http/v3"
-	jsoncodec "go.unistack.org/micro-codec-json/v3"
+	jsonpbcodec "go.unistack.org/micro-codec-jsonpb/v3"
 	"go.unistack.org/micro/v3/client"
-	"go.unistack.org/micro/v3/logger"
+	log "go.unistack.org/micro/v3/logger"
 )
 
 func main() {
@@ -106,12 +106,18 @@ func main() {
 // }
 
 func HomeTest() {
+  logger := log.NewLogger(log.WithCallerSkipCount(2))
+  c := mhttp.NewClient(
+  client.ContentType("application/json"),
+  client.Codec("application/json", jsonpbcodec.NewCodec()),
+)
+if err := c.Init(); err != nil {
+logger.Fatal(context.TODO(), err)
+}
+
 	cli := client.NewClientCallOptions(
-		mhttp.NewClient(
-			client.ContentType("application/json"),
-			client.Codec("application/json", jsoncodec.NewCodec()),
-		),
-		client.WithAddress("0.0.0.0:8080"),
+		c,
+    client.WithAddress("http://127.0.0.1:8080"),
 	)
 
 	mc := pb.NewBookServerClient("bookserver-micro-client", cli)

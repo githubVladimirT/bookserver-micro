@@ -1,7 +1,7 @@
 //go:build tools
 
-package main
+package tools
 
 import (
-	_ "go.unistack.org/micro-proto/v3/openapiv3"
+	_ "go.unistack.org/micro-proto/v3"
 )
