@@ -36,8 +36,8 @@ const (
 
 	insert_book            = `INSERT INTO books VALUES(NULL, ?, ?, ?, ?, ?);`
 	selectid_insertNewBook = `SELECT "id" FROM books WHERE filepath=$1`
-	selectdata             = `SELECT "title", "author", "genre", "year" FROM "books" WHERE filepath=$1`
-	sort_query             = `SELECT * FROM books ORDER BY `
+	selectdata             = `SELECT "author", "genre", "year" FROM "books" WHERE title=?`
+	sort_query             = `SELECT * FROM books ORDER BY ?`
 	get_all_books          = `SELECT title FROM books;`
 )
 
@@ -60,9 +60,8 @@ type ServerHandler struct {
 	db *sql.DB
 }
 
-// <!--- INIT DATABASE --->
 func InitDB() *sql.DB {
-	db, err := sql.Open("sqlite3", "books.db")
+	db, err := sql.Open("sqlite3", "db/sqlite3/books.db")
 	if err != nil {
 		panic(err)
 	}
@@ -94,11 +93,13 @@ func (h *ServerHandler) InsertNewBook(book Book) (int, error) {
 		return -1, err
 	}
 
+	println(id)
+
 	return id, nil
 }
 
 func (h *ServerHandler) Home(ctx context.Context, req *pb.Empty, rsp *pb.StatusRsp) error {
-	rsp.Description = ""
+	rsp.Description = "HomePage"
 
 	httpsrv.SetRspCode(ctx, http.StatusOK)
 	return nil
@@ -128,8 +129,11 @@ func (h *ServerHandler) GetAllBooks(ctx context.Context, req *pb.Empty, rsp *pb.
 func (h *ServerHandler) GetAllBooksAndSort(ctx context.Context, req *pb.SortType, rsp *pb.GetAllBooksAndSort) error {
 	var books []*pb.GetBookRsp
 
-	rows, err := h.db.Query(sort_query + req.SortType)
+	// print(sort_query + req.SortType)
+
+	rows, err := h.db.Query(sort_query, req.SortType)
 	if err != nil {
+		print(err.Error())
 		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
 	}
@@ -149,8 +153,11 @@ func (h *ServerHandler) GetAllBooksAndSort(ctx context.Context, req *pb.SortType
 func (h *ServerHandler) Book(ctx context.Context, req *pb.GetBook, rsp *pb.GetBookRsp) error {
 	var title, author, genre, year string
 
-	err := h.db.QueryRow(selectdata, "books/"+req.BookTitle).Scan(&title, &author, &genre, &year)
+	title = req.BookTitle
+
+	err := h.db.QueryRow(selectdata, title).Scan(&author, &genre, &year)
 	if err != nil {
+		print(err.Error())
 		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
 	}

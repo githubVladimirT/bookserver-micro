@@ -2,6 +2,11 @@ package main
 
 import (
 	"context"
+	"os"
+
+	// "github.com/searKing/golang/go/exp/slices"
+
+	"slices"
 
 	pb "github.com/githubVladimirT/bookserver-micro/proto"
 
@@ -12,112 +17,41 @@ import (
 )
 
 func main() {
-	// cli := client.NewClientCallOptions(
-	// 	mhttp.NewClient(
-	// 		client.ContentType("application/json"),
-	// 		client.Codec("application/json", jsoncodec.NewCodec()),
-	// 	),
-	// 	client.WithAddress("0.0.0.0:8080"),
-	// )
-
-	// mc := pb.NewBookServerClient("bookserver-micro-client", cli)
-
 	println("START HomeTest()")
-	// HomeTest(mc)
 	HomeTest()
-	println("\nEND HomeTest()")
+	println("END HomeTest()")
 
-	// println("START PushTest()")
-	// PushTest(mc)
-	// println("END PushTest()")
+	println("START PushTest()")
+	PushTest()
+	println("END PushTest()")
 
-	// println("START GetAllBooksTest()")
-	// GetAllBooksTest(mc)
-	// println("END GetAllBooksTest()")
+	println("START GetAllBooksTest()")
+	GetAllBooksTest()
+	println("END GetAllBooksTest()")
 
-	// println("START BookTest()")
-	// BookTest(mc)
-	// println("END BookTest()")
+	println("START BookTest()")
+	BookTest()
+	println("END BookTest()")
 
-	// println("START GetAllBooksAndSortTest()")
-	// GetAllBooksAndSortTest(mc)
-	// println("END GetAllBooksAndSortTest()")
+	println("START GetAllBooksAndSortTest()")
+	GetAllBooksAndSortTest()
+	println("END GetAllBooksAndSortTest()")
 }
-
-// func GetAllBooksAndSortTest(mc pb.BookServerClient) {
-// 	rspgabas1, err := mc.GetAllBooksAndSort(context.TODO(), &pb.SortType{SortType: "title"})
-// 	if err != nil {
-// 		logger.Error(context.TODO(), err)
-// 		return
-// 	}
-// 	rspgabas2, err := mc.GetAllBooksAndSort(context.TODO(), &pb.SortType{SortType: "author"})
-// 	if err != nil {
-// 		logger.Error(context.TODO(), err)
-// 		return
-// 	}
-// 	rspgabas3, err := mc.GetAllBooksAndSort(context.TODO(), &pb.SortType{SortType: "genre"})
-// 	if err != nil {
-// 		logger.Error(context.TODO(), err)
-// 		return
-// 	}
-// 	rspgabas4, err := mc.GetAllBooksAndSort(context.TODO(), &pb.SortType{SortType: "year"})
-// 	if err != nil {
-// 		logger.Error(context.TODO(), err)
-// 		return
-// 	}
-
-// 	book, err := mc.Book(context.TODO(), &pb.GetBook{BookTitle: "TestBook"})
-// 	if err != nil {
-// 		logger.Error(context.TODO(), err)
-// 		return
-// 	}
-
-// 	if !slices.Contains(rspgabas1.Books, book) {
-// 		logger.Error(context.TODO(), "invalid rsp received: %#+v", rspgabas1)
-// 		return
-// 	}
-// 	if !slices.Contains(rspgabas2.Books, book) {
-// 		logger.Error(context.TODO(), "invalid rsp received: %#+v", rspgabas2)
-// 		return
-// 	}
-// 	if !slices.Contains(rspgabas3.Books, book) {
-// 		logger.Error(context.TODO(), "invalid rsp received: %#+v", rspgabas3)
-// 		return
-// 	}
-// 	if !slices.Contains(rspgabas4.Books, book) {
-// 		logger.Error(context.TODO(), "invalid rsp received: %#+v", rspgabas4)
-// 		return
-// 	}
-// }
-
-// func HomeTest(mc pb.BookServerClient) {
-// 	req := &pb.Empty{}
-// 	rsph, err := mc.Home(context.TODO(), req)
-
-// 	if err != nil {
-// 		logger.Error(context.TODO(), err)
-// 		return
-// 	}
-
-// 	if rsph.Description != "HomePage" {
-// 		logger.Error(context.TODO(), "invalid rsp received: %#+v", rsph)
-// 		return
-// 	}
-// }
 
 func HomeTest() {
-  logger := log.NewLogger(log.WithCallerSkipCount(2))
-  c := mhttp.NewClient(
-  client.ContentType("application/json"),
-  client.Codec("application/json", jsonpbcodec.NewCodec()),
-)
-if err := c.Init(); err != nil {
-logger.Fatal(context.TODO(), err)
-}
+	logger := log.NewLogger(log.WithCallerSkipCount(2))
+	c := mhttp.NewClient(
+		client.ContentType("application/json"),
+		client.Codec("application/json", jsonpbcodec.NewCodec()),
+	)
+
+	if err := c.Init(); err != nil {
+		logger.Fatal(context.TODO(), err)
+	}
 
 	cli := client.NewClientCallOptions(
 		c,
-    client.WithAddress("http://127.0.0.1:8080"),
+		client.WithAddress("http://127.0.0.1:8080"),
 	)
 
 	mc := pb.NewBookServerClient("bookserver-micro-client", cli)
@@ -130,60 +64,184 @@ logger.Fatal(context.TODO(), err)
 	}
 
 	if rsp.Description != "HomePage" {
-		logger.Error(context.TODO(), "invalid rsp received: %#+v", rsp)
+		logger.Errorf(context.TODO(), "invalid rsp received: %#+v", rsp)
 		return
 	}
+
+	logger.Info(context.TODO(), "--| TEST PASSED |--")
 }
 
-// func PushTest(mc pb.BookServerClient) {
-// 	book_bytes, err := os.ReadFile("../books/TestBookBytes.pdf")
-// 	if err != nil {
-// 		logger.Error(context.TODO(), err)
-// 		return
-// 	}
+func PushTest() {
+	logger := log.NewLogger(log.WithCallerSkipCount(2))
+	c := mhttp.NewClient(
+		client.ContentType("application/json"),
+		client.Codec("application/json", jsonpbcodec.NewCodec()),
+	)
 
-// 	book := &pb.PostBook{
-// 		BookTitle: "TestBook",
-// 		Author:    "TestAuthor",
-// 		Genre:     "TestGenre",
-// 		Year:      "2023",
-// 		BookBytes: book_bytes,
-// 	}
+	if err := c.Init(); err != nil {
+		logger.Fatal(context.TODO(), err)
+	}
 
-// 	rspp, err := mc.Push(context.TODO(), book)
-// 	if err != nil {
-// 		logger.Error(context.TODO(), err)
-// 		return
-// 	}
+	cli := client.NewClientCallOptions(
+		c,
+		client.WithAddress("http://127.0.0.1:8080"),
+	)
 
-// 	if rspp.BookId != "-1" {
-// 		logger.Error(context.TODO(), "invalid rsp received: %#+v", rspp)
-// 		return
-// 	}
-// }
+	mc := pb.NewBookServerClient("bookserver-micro-client", cli)
 
-// func BookTest(mc pb.BookServerClient) {
-// 	rspb, err := mc.Book(context.TODO(), &pb.GetBook{BookTitle: "TestBook"})
-// 	if err != nil {
-// 		logger.Error(context.TODO(), err)
-// 		return
-// 	}
+	book_bytes, err := os.ReadFile("../books/TestBookBytes.pdf")
+	if err != nil {
+		logger.Error(context.TODO(), err)
+		return
+	}
 
-// 	if rspb.Title != "TestBook" || rspb.Author != "TestAuthor" || rspb.Genre != "TestGenre" || rspb.Year != "2023" {
-// 		logger.Error(context.TODO(), "invalid rsp received: %#+v", rspb)
-// 		return
-// 	}
-// }
+	book := &pb.PostBook{
+		BookTitle: "TestBook",
+		Author:    "TestAuthor",
+		Genre:     "TestGenre",
+		Year:      "2023",
+		BookBytes: book_bytes,
+	}
 
-// func GetAllBooksTest(mc pb.BookServerClient) {
-// 	rspgab, err := mc.GetAllBooks(context.TODO(), &pb.Empty{})
-// 	if err != nil {
-// 		logger.Error(context.TODO(), err)
-// 		return
-// 	}
+	rspp, err := mc.Push(context.TODO(), book)
+	if err != nil {
+		logger.Error(context.TODO(), err)
+		return
+	}
 
-// 	if !slices.Contains(rspgab.Books, "TestBook") {
-// 		logger.Error(context.TODO(), "invalid rsp received: %#+v", rspgab)
-// 		return
-// 	}
-// }
+	if rspp.BookId == "-1" {
+		logger.Errorf(context.TODO(), "invalid rsp received: %#+v", rspp)
+		return
+	}
+
+	logger.Info(context.TODO(), "--| TEST PASSED |--")
+}
+
+func BookTest() {
+	logger := log.NewLogger(log.WithCallerSkipCount(2))
+	c := mhttp.NewClient(
+		client.ContentType("application/json"),
+		client.Codec("application/json", jsonpbcodec.NewCodec()),
+	)
+
+	if err := c.Init(); err != nil {
+		logger.Fatal(context.TODO(), err)
+	}
+
+	cli := client.NewClientCallOptions(
+		c,
+		client.WithAddress("http://127.0.0.1:8080"),
+	)
+
+	mc := pb.NewBookServerClient("bookserver-micro-client", cli)
+
+	rspb, err := mc.Book(context.TODO(), &pb.GetBook{BookTitle: "TestBook"})
+	if err != nil {
+		logger.Error(context.TODO(), err)
+		return
+	}
+
+	if rspb.Title != "TestBook" || rspb.Author != "TestAuthor" || rspb.Genre != "TestGenre" || rspb.Year != "2023" {
+		logger.Errorf(context.TODO(), "invalid rsp received: %#+v", rspb)
+		return
+	}
+
+	logger.Info(context.TODO(), "--| TEST PASSED |--")
+}
+
+func GetAllBooksTest() {
+	logger := log.NewLogger(log.WithCallerSkipCount(2))
+	c := mhttp.NewClient(
+		client.ContentType("application/json"),
+		client.Codec("application/json", jsonpbcodec.NewCodec()),
+	)
+
+	if err := c.Init(); err != nil {
+		logger.Fatal(context.TODO(), err)
+	}
+
+	cli := client.NewClientCallOptions(
+		c,
+		client.WithAddress("http://127.0.0.1:8080"),
+	)
+
+	mc := pb.NewBookServerClient("bookserver-micro-client", cli)
+
+	rspgab, err := mc.GetAllBooks(context.TODO(), &pb.Empty{})
+	if err != nil {
+		logger.Error(context.TODO(), err)
+		return
+	}
+
+	if !slices.Contains(rspgab.Books, "TestBook") {
+		logger.Errorf(context.TODO(), "invalid rsp received: %#+v", rspgab)
+		return
+	}
+
+	logger.Info(context.TODO(), "--| TEST PASSED |--")
+}
+
+func GetAllBooksAndSortTest() {
+	logger := log.NewLogger(log.WithCallerSkipCount(2))
+	c := mhttp.NewClient(
+		client.ContentType("application/json"),
+		client.Codec("application/json", jsonpbcodec.NewCodec()),
+	)
+
+	if err := c.Init(); err != nil {
+		logger.Fatal(context.TODO(), err)
+	}
+
+	cli := client.NewClientCallOptions(
+		c,
+		client.WithAddress("http://127.0.0.1:8080"),
+	)
+
+	mc := pb.NewBookServerClient("bookserver-micro-client", cli)
+
+	rspgabas1, err := mc.GetAllBooksAndSort(context.TODO(), &pb.SortType{SortType: "title"})
+	if err != nil {
+		logger.Error(context.TODO(), err)
+		return
+	}
+	rspgabas2, err := mc.GetAllBooksAndSort(context.TODO(), &pb.SortType{SortType: "author"})
+	if err != nil {
+		logger.Error(context.TODO(), err)
+		return
+	}
+	rspgabas3, err := mc.GetAllBooksAndSort(context.TODO(), &pb.SortType{SortType: "genre"})
+	if err != nil {
+		logger.Error(context.TODO(), err)
+		return
+	}
+	rspgabas4, err := mc.GetAllBooksAndSort(context.TODO(), &pb.SortType{SortType: "year"})
+	if err != nil {
+		logger.Error(context.TODO(), err)
+		return
+	}
+
+	book, err := mc.Book(context.TODO(), &pb.GetBook{BookTitle: "TestBook"})
+	if err != nil {
+		logger.Error(context.TODO(), err)
+		return
+	}
+
+	if !slices.Contains(rspgabas1.Books, book) {
+		logger.Errorf(context.TODO(), "invalid rsp received: %#+v", rspgabas1)
+		return
+	}
+	if !slices.Contains(rspgabas2.Books, book) {
+		logger.Errorf(context.TODO(), "invalid rsp received: %#+v", rspgabas2)
+		return
+	}
+	if !slices.Contains(rspgabas3.Books, book) {
+		logger.Errorf(context.TODO(), "invalid rsp received: %#+v", rspgabas3)
+		return
+	}
+	if !slices.Contains(rspgabas4.Books, book) {
+		logger.Errorf(context.TODO(), "invalid rsp received: %#+v", rspgabas4)
+		return
+	}
+
+	logger.Info(context.TODO(), "--| TEST PASSED |--")
+}
