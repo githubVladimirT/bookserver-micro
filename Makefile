@@ -3,7 +3,7 @@
 HOST=127.0.0.1
 PORT=8080
 
-all: clean build run
+all: build run
 
 build:
 	go build .
