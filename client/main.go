@@ -89,7 +89,7 @@ func PushTest() {
 
 	mc := pb.NewBookServerClient("bookserver-micro-client", cli)
 
-	book_bytes, err := os.ReadFile("../TestBookBytes.pdf")
+	book_bytes, err := os.ReadFile("./TestBookBytes.pdf")
 	if err != nil {
 		logger.Error(context.TODO(), err)
 		return

@@ -4,8 +4,8 @@ package bookservermicro;
 option go_package = "github.com/githubVladimirT/bookserver-micro;pb";
 
 import "api/annotations.proto";
-import "codec/frame.proto";
-import "tag/tag.proto";
+//import "codec/frame.proto";
+//import "tag/tag.proto";
 import "openapiv3/annotations.proto";
 
 service BookServer {
