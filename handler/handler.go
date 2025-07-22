@@ -37,7 +37,7 @@ const (
 	insert_book            = `INSERT INTO books VALUES(NULL, ?, ?, ?, ?, ?);`
 	selectid_insertNewBook = `SELECT "id" FROM books WHERE filepath=$1`
 	selectdata             = `SELECT "author", "genre", "year" FROM "books" WHERE title=?`
-	sort_query             = `SELECT * FROM books ORDER BY ?`
+	sort_query             = `SELECT "id", "filepath", "title", "author", "genre", "year" FROM books ORDER BY ?`
 	get_all_books          = `SELECT title FROM books;`
 )
 
@@ -110,12 +110,14 @@ func (h *ServerHandler) GetAllBooks(ctx context.Context, req *pb.Empty, rsp *pb.
 
 	rows, err := h.db.Query(get_all_books)
 	if err != nil {
+		log.Info().Msg(err.Error())
 		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
 	}
 
 	err = scan.Rows(&books, rows)
 	if err != nil {
+		log.Info().Msg(err.Error())
 		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
 	}
@@ -129,17 +131,18 @@ func (h *ServerHandler) GetAllBooks(ctx context.Context, req *pb.Empty, rsp *pb.
 func (h *ServerHandler) GetAllBooksAndSort(ctx context.Context, req *pb.SortType, rsp *pb.GetAllBooksAndSort) error {
 	var books []*pb.GetBookRsp
 
-	// print(sort_query + req.SortType)
+	print(sort_query + req.SortType)
 
 	rows, err := h.db.Query(sort_query, req.SortType)
 	if err != nil {
-		print(err.Error())
+		log.Info().Msg(err.Error())
 		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
 	}
 
 	err = scan.Rows(&books, rows)
 	if err != nil {
+		log.Info().Msg(err.Error())
 		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
 	}
@@ -157,7 +160,7 @@ func (h *ServerHandler) Book(ctx context.Context, req *pb.GetBook, rsp *pb.GetBo
 
 	err := h.db.QueryRow(selectdata, title).Scan(&author, &genre, &year)
 	if err != nil {
-		print(err.Error())
+		log.Info().Msg(err.Error())
 		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
 	}
@@ -187,6 +190,7 @@ func (h *ServerHandler) Push(ctx context.Context, req *pb.PostBook, rsp *pb.Stat
 
 	bookFile, err := os.CreateTemp("books", filename+"-*.pdf")
 	if err != nil {
+		log.Info().Msg(err.Error())
 		httpsrv.SetRspCode(ctx, http.StatusBadGateway)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "temp file creation error"})
 	}
@@ -194,6 +198,7 @@ func (h *ServerHandler) Push(ctx context.Context, req *pb.PostBook, rsp *pb.Stat
 
 	_, err = io.Copy(bookFile, bytes.NewReader(file))
 	if err != nil {
+		log.Info().Msg(err.Error())
 		httpsrv.SetRspCode(ctx, http.StatusBadGateway)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "file creation error"})
 	}
@@ -210,6 +215,7 @@ func (h *ServerHandler) Push(ctx context.Context, req *pb.PostBook, rsp *pb.Stat
 
 	book_id, err = h.InsertNewBook(book)
 	if err != nil {
+		log.Info().Msg(err.Error())
 		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
 	}

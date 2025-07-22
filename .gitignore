@@ -1,6 +1,7 @@
 /bookserver
 /*.db
 /*.code-workspace
-/.vscode
+/.vscode/
 /bookserver-micro
 /client/client
+/books/
