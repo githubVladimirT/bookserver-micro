@@ -2,17 +2,18 @@
 
 HOST=127.0.0.1
 PORT=8080
+NAME=bookserver-micro
 
 all: build run
 
 build:
-	go build .
+	go build -o bin/$(NAME)
 
 run:
-	./bookserver-micro $(HOST) $(PORT)
+	bin/$(NAME) $(HOST) $(PORT)
 
 clean:
-	rm -f books/* db/books.db
+	rm -f books/* db/books.db bin/*
 
 gen:
 	./gen.sh
