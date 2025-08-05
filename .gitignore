@@ -1,8 +1,7 @@
-/bookserver
+/bin/*
 /*.db
+/db/sqlite3/*.db
 /*.code-workspace
 /.vscode/
-/bookserver-micro
 /client/client
 /books/
-/bin/*
