@@ -3,7 +3,7 @@ package handler
 import (
 	"bytes"
 	"context"
-	"database/sql"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -13,9 +13,11 @@ import (
 
 	"github.com/blockloop/scan/v2"
 	"github.com/google/uuid"
+
 	_ "github.com/mattn/go-sqlite3"
 
 	// "github.com/rs/zerolog"
+	"github.com/jmoiron/sqlx"
 	log "github.com/rs/zerolog/log"
 	httpsrv "go.unistack.org/micro-server-http/v3"
 )
@@ -34,18 +36,18 @@ const (
 	);
 	`
 
-	insert_book            = `INSERT INTO books VALUES(NULL, ?, ?, ?, ?, ?);`
-	selectid_insertNewBook = `SELECT "id" FROM books WHERE filepath=$1`
-	selectdata             = `SELECT "author", "genre", "year" FROM "books" WHERE title=?`
-	sort_query             = `SELECT "id", "filepath", "title", "author", "genre", "year" FROM books ORDER BY ?`
+	insert_book            = `INSERT INTO books VALUES(NULL, "%s", "%s", "%s", "%s", "%s");`
+	selectid_insertNewBook = `SELECT id FROM books WHERE filepath="%s";`
+	selectdata             = `SELECT title, author, genre, year FROM books WHERE title="%s";`
+	sort_query             = `SELECT title, author, genre, year FROM books ORDER BY %s;`
 	get_all_books          = `SELECT title FROM books;`
 )
 
 type ReturnBook struct {
-	Title  string
-	Author string
-	Genre  string
-	Year   string
+	Title  string `json:"filepath"`
+	Author string `json:"author"`
+	Genre  string `json:"genre"`
+	Year   string `json:"year"`
 }
 
 type Book struct {
@@ -57,11 +59,11 @@ type Book struct {
 }
 
 type ServerHandler struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
-func InitDB() *sql.DB {
-	db, err := sql.Open("sqlite3", "db/sqlite3/books.db")
+func InitDB() *sqlx.DB {
+	db, err := sqlx.Open("sqlite3", "db/sqlite3/books.db")
 	if err != nil {
 		panic(err)
 	}
@@ -83,12 +85,12 @@ func NewServerHandler() *ServerHandler {
 func (h *ServerHandler) InsertNewBook(book Book) (int, error) {
 	var id int
 
-	_, err := h.db.Exec(insert_book, book.Filepath, book.Title, book.Author, book.Genre, book.Year)
+	_, err := h.db.Exec(fmt.Sprintf(insert_book, book.Filepath, book.Title, book.Author, book.Genre, book.Year))
 	if err != nil {
 		return -1, err
 	}
 
-	err = h.db.QueryRow(selectid_insertNewBook, book.Filepath).Scan(&id)
+	err = h.db.QueryRow(fmt.Sprintf(selectid_insertNewBook, book.Filepath)).Scan(&id)
 	if err != nil {
 		return -1, err
 	}
@@ -129,22 +131,33 @@ func (h *ServerHandler) GetAllBooks(ctx context.Context, req *pb.Empty, rsp *pb.
 }
 
 func (h *ServerHandler) GetAllBooksAndSort(ctx context.Context, req *pb.SortType, rsp *pb.GetAllBooksAndSort) error {
+	allowedSortFields := map[string]bool{
+		"title":  true,
+		"author": true,
+		"genre":  true,
+		"year":   true,
+	}
+
+	sortField := "title" // default value
+	if req.SortType != "" && allowedSortFields[req.SortType] {
+		sortField = req.SortType
+	}
+
+	query := fmt.Sprintf(`SELECT title, author, genre, year FROM books ORDER BY %s`, sortField)
+	log.Info().Str("query", query).Msg("Executing query")
+
 	var books []*pb.GetBookRsp
+	err := h.db.Select(&books, query)
 
-	print(sort_query + req.SortType)
-
-	rows, err := h.db.Query(sort_query, req.SortType)
 	if err != nil {
-		log.Info().Msg(err.Error())
+		log.Error().Err(err).Msg("Database query failed")
 		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
 	}
 
-	err = scan.Rows(&books, rows)
-	if err != nil {
-		log.Info().Msg(err.Error())
+	if len(books) == 0 {
 		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
-		return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
+		return httpsrv.SetError(&pb.StatusRsp{Description: "No books found"})
 	}
 
 	rsp.Books = books
@@ -152,26 +165,38 @@ func (h *ServerHandler) GetAllBooksAndSort(ctx context.Context, req *pb.SortType
 
 	return nil
 }
-
 func (h *ServerHandler) Book(ctx context.Context, req *pb.GetBook, rsp *pb.GetBookRsp) error {
-	var title, author, genre, year string
+	var books []pb.GetBookRsp
 
-	title = req.BookTitle
-
-	err := h.db.QueryRow(selectdata, title).Scan(&author, &genre, &year)
+	rows, err := h.db.Queryx(fmt.Sprintf(selectdata, req.BookTitle))
 	if err != nil {
 		log.Info().Msg(err.Error())
 		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
 	}
+	defer rows.Close()
 
-	rsp.Title = title
-	rsp.Author = author
-	rsp.Genre = genre
-	rsp.Year = year
+	for rows.Next() {
+		var b pb.GetBookRsp
+		if err := rows.StructScan(&b); err != nil {
+			log.Info().Msg(err.Error())
+			httpsrv.SetRspCode(ctx, http.StatusBadRequest)
+			return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
+		}
+		books = append(books, b)
+	}
+
+	if len(books) == 0 {
+		httpsrv.SetRspCode(ctx, http.StatusNotFound)
+		return httpsrv.SetError(&pb.StatusRsp{Description: "book not found"})
+	}
+
+	rsp.Title = books[0].Title
+	rsp.Author = books[0].Author
+	rsp.Genre = books[0].Genre
+	rsp.Year = books[0].Year
 
 	httpsrv.SetRspCode(ctx, http.StatusOK)
-
 	return nil
 }
 

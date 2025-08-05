@@ -32,6 +32,8 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
+require github.com/jmoiron/sqlx v1.4.0
+
 require (
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/silas/dag v0.0.0-20220518035006-a7e85ada93c5 // indirect
