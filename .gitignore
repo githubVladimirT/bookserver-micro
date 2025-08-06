@@ -1,6 +1,5 @@
 /bin/*
-/*.db
-/db/sqlite3/*.db
+*.db
 /*.code-workspace
 /.vscode/
 /client/client
