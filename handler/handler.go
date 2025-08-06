@@ -3,7 +3,6 @@ package handler
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -36,10 +35,10 @@ const (
 	);
 	`
 
-	insert_book            = `INSERT INTO books VALUES(NULL, "%s", "%s", "%s", "%s", "%s");`
-	selectid_insertNewBook = `SELECT id FROM books WHERE filepath="%s";`
-	selectdata             = `SELECT title, author, genre, year FROM books WHERE title="%s";`
-	sort_query             = `SELECT title, author, genre, year FROM books ORDER BY %s;`
+	insert_book            = `INSERT INTO books VALUES(NULL, ?, ?, ?, ?, ?);`
+	selectid_insertNewBook = `SELECT id FROM books WHERE filepath=?;`
+	selectdata             = `SELECT title, author, genre, year FROM books WHERE title=?;`
+	sort_query             = `SELECT title, author, genre, year FROM books ORDER BY ?;`
 	get_all_books          = `SELECT title FROM books;`
 )
 
@@ -85,12 +84,12 @@ func NewServerHandler() *ServerHandler {
 func (h *ServerHandler) InsertNewBook(book Book) (int, error) {
 	var id int
 
-	_, err := h.db.Exec(fmt.Sprintf(insert_book, book.Filepath, book.Title, book.Author, book.Genre, book.Year))
+	_, err := h.db.Exec(insert_book, book.Filepath, book.Title, book.Author, book.Genre, book.Year)
 	if err != nil {
 		return -1, err
 	}
 
-	err = h.db.QueryRow(fmt.Sprintf(selectid_insertNewBook, book.Filepath)).Scan(&id)
+	err = h.db.QueryRow(selectid_insertNewBook, book.Filepath).Scan(&id)
 	if err != nil {
 		return -1, err
 	}
@@ -143,11 +142,11 @@ func (h *ServerHandler) GetAllBooksAndSort(ctx context.Context, req *pb.SortType
 		sortField = req.SortType
 	}
 
-	query := fmt.Sprintf(`SELECT title, author, genre, year FROM books ORDER BY %s`, sortField)
-	log.Info().Str("query", query).Msg("Executing query")
+	// query := fmt.Sprintf(`SELECT title, author, genre, year FROM books ORDER BY %s`, sortField)
+	// log.Info().Str("query", query).Msg("Executing query")
 
 	var books []*pb.GetBookRsp
-	err := h.db.Select(&books, query)
+	err := h.db.Select(&books, sort_query, sortField)
 
 	if err != nil {
 		log.Error().Err(err).Msg("Database query failed")
@@ -168,7 +167,7 @@ func (h *ServerHandler) GetAllBooksAndSort(ctx context.Context, req *pb.SortType
 func (h *ServerHandler) Book(ctx context.Context, req *pb.GetBook, rsp *pb.GetBookRsp) error {
 	var books []pb.GetBookRsp
 
-	rows, err := h.db.Queryx(fmt.Sprintf(selectdata, req.BookTitle))
+	rows, err := h.db.Queryx(selectdata, req.BookTitle)
 	if err != nil {
 		log.Info().Msg(err.Error())
 		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
