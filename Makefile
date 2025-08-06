@@ -13,7 +13,7 @@ run:
 	bin/$(NAME) $(HOST) $(PORT)
 
 clean:
-	rm -f books/* db/books.db bin/*
+	rm -f books/* db/sqlite3/books.db bin/*
 
 gen:
 	./gen.sh
