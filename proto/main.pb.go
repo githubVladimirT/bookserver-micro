@@ -500,7 +500,7 @@ const file_main_proto_rawDesc = "" +
 	"\tStatusRsp\x12 \n" +
 	"\vdescription\x18\x01 \x01(\tR\vdescription\"0\n" +
 	"\x15statusUploadedBookRsp\x12\x17\n" +
-	"\abook_id\x18\x01 \x01(\tR\x06bookId2\xbc\x05\n" +
+	"\abook_id\x18\x01 \x01(\tR\x06bookId2\x80\x06\n" +
 	"\n" +
 	"BookServer\x12|\n" +
 	"\x04Home\x12\x16.bookservermicro.Empty\x1a\x1a.bookservermicro.StatusRsp\"@\xaa\x84\x9e\x032*\x04Home:*\n" +
@@ -509,8 +509,13 @@ const file_main_proto_rawDesc = "" +
 	"\x10application/json\x12\x10\n" +
 	"\x0e\x12\f\n" +
 	"\n" +
-	".StatusRsp\xb2\xea\xff\xf9\x01\x03\x12\x01/\x12[\n" +
-	"\x04Push\x12\x19.bookservermicro.postBook\x1a&.bookservermicro.statusUploadedBookRsp\"\x10\xb2\xea\xff\xf9\x01\n" +
+	".StatusRsp\xb2\xea\xff\xf9\x01\x03\x12\x01/\x12\x9e\x01\n" +
+	"\x04Push\x12\x19.bookservermicro.postBook\x1a&.bookservermicro.statusUploadedBookRsp\"S\xaa\x84\x9e\x03>*\x04Push:6\n" +
+	"4\x122\n" +
+	"0\n" +
+	"\x10application/json\x12\x1c\n" +
+	"\x1a\x12\x18\n" +
+	"\x16.statusUploadedBookRsp\xb2\xea\xff\xf9\x01\n" +
 	":\x01*\"\x05/push\x12\x84\x01\n" +
 	"\x04Book\x12\x18.bookservermicro.getBook\x1a\x1b.bookservermicro.getBookRsp\"E\xaa\x84\x9e\x033*\x04Book:+\n" +
 	")\x12'\n" +
