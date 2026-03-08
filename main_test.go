@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 
@@ -202,6 +203,7 @@ func TestGetAllBooksAndSort(t *testing.T) {
 		for i, b := range rsp.Books {
 			t.Logf("Book %d: %+v", i, b)
 		}
+		fmt.Println("")
 	}
 }
 
