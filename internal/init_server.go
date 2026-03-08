@@ -15,7 +15,6 @@ import (
 	"go.unistack.org/micro/v3/server"
 
 	jsonpbcodec "go.unistack.org/micro-codec-jsonpb/v3"
-	// "go.unistack.org/micro/v3/logger"
 )
 
 func InitServer() {

@@ -15,7 +15,6 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
-	// "github.com/rs/zerolog"
 	"github.com/jmoiron/sqlx"
 	log "github.com/rs/zerolog/log"
 	httpsrv "go.unistack.org/micro-server-http/v3"
@@ -141,9 +140,6 @@ func (h *ServerHandler) GetAllBooksAndSort(ctx context.Context, req *pb.SortType
 	if req.SortType != "" && allowedSortFields[req.SortType] {
 		sortField = req.SortType
 	}
-
-	// query := fmt.Sprintf(`SELECT title, author, genre, year FROM books ORDER BY %s`, sortField)
-	// log.Info().Str("query", query).Msg("Executing query")
 
 	var books []*pb.GetBookRsp
 	err := h.db.Select(&books, sort_query, sortField)
