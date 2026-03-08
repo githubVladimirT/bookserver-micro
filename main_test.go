@@ -1,4 +1,4 @@
-package handler
+package main
 
 import (
 	"context"
@@ -12,12 +12,16 @@ import (
 	mhttp "go.unistack.org/micro-client-http/v3"
 	jsonpbcodec "go.unistack.org/micro-codec-jsonpb/v3"
 	"go.unistack.org/micro/v3/client"
+
+	"github.com/githubVladimirT/bookserver-micro/internal"
 )
 
 const URL = "http://127.0.0.1:8080"
-const TestBookPath = "./../testbooks/TestBookBytes.pdf"
+const TestBookPath = "./testbooks/TestBookBytes.pdf"
 
 func TestHome(t *testing.T) {
+	go internal.InitServer()
+
 	c := mhttp.NewClient(
 		client.ContentType("application/json"),
 		client.Codec("application/json", jsonpbcodec.NewCodec()),
@@ -48,6 +52,8 @@ func TestHome(t *testing.T) {
 }
 
 func TestPush(t *testing.T) {
+	go internal.InitServer()
+
 	c := mhttp.NewClient(
 		client.ContentType("application/json"),
 		client.Codec("application/json", jsonpbcodec.NewCodec()),
@@ -91,6 +97,8 @@ func TestPush(t *testing.T) {
 }
 
 func TestBook(t *testing.T) {
+	go internal.InitServer()
+
 	c := mhttp.NewClient(
 		client.ContentType("application/json"),
 		client.Codec("application/json", jsonpbcodec.NewCodec()),
@@ -117,9 +125,13 @@ func TestBook(t *testing.T) {
 		t.Errorf("invalid rsp received: %#+v", rspb)
 		return
 	}
+
+	t.Logf("Book: %+v", rspb)
 }
 
 func TestGetAllBooks(t *testing.T) {
+	go internal.InitServer()
+
 	c := mhttp.NewClient(
 		client.ContentType("application/json"),
 		client.Codec("application/json", jsonpbcodec.NewCodec()),
@@ -146,9 +158,15 @@ func TestGetAllBooks(t *testing.T) {
 		t.Errorf("invalid rsp received: %#+v", rspgab)
 		return
 	}
+
+	for i, b := range rspgab.Books {
+		t.Logf("Book %d: %+v", i, b)
+	}
 }
 
 func TestGetAllBooksAndSort(t *testing.T) {
+	go internal.InitServer()
+
 	c := mhttp.NewClient(
 		client.ContentType("application/json"),
 		client.Codec("application/json", jsonpbcodec.NewCodec()),
@@ -179,9 +197,10 @@ func TestGetAllBooksAndSort(t *testing.T) {
 		if !containsBook(rsp.Books, book) {
 			t.Errorf("book not found in %s sorted response", sortType)
 			t.Logf("Expected book: %+v", book)
-			for i, b := range rsp.Books {
-				t.Logf("Book %d: %+v", i, b)
-			}
+		}
+
+		for i, b := range rsp.Books {
+			t.Logf("Book %d: %+v", i, b)
 		}
 	}
 }

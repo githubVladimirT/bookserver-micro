@@ -3,11 +3,14 @@
 HOST=127.0.0.1
 PORT=8080
 NAME=bookserver-micro
+GO_CMD := go
+GO_TEST := $(GO_CMD) test
+GO_BUILD := $(GO_CMD) build
 
 all: clean init build run
 
 clean:
-	rm -f books/* db/sqlite3/books.db bin/*
+	rm -f books/* db/sqlite3/books.db bin/* coverage.out
 
 init:
 	mkdir -p db/sqlite3/ books/ bin/
@@ -15,8 +18,15 @@ init:
 gen:
 	./gen.sh
 
-build:
-	go build -o bin/$(NAME)
+build: init gen
+	$(GO_BUILD) -o bin/$(NAME)
 
-run:
+run: build
 	bin/$(NAME) $(HOST) $(PORT)
+
+test:
+	$(GO_TEST) -v -race ./...
+
+test-coverage:
+	$(GO_TEST) -coverprofile=coverage.out ./...
+	$(GO_CMD) tool cover -html=coverage.out

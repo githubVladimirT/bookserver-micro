@@ -72,7 +72,7 @@ func InitDB() *sqlx.DB {
 		panic(err)
 	}
 
-	println("DB inited successfully")
+	println(" --- DB inited successfully")
 
 	return db
 }
