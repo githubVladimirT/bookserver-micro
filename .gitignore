@@ -1,5 +1,5 @@
 /bin/*
-*.db
+/db/sqlite3/*.db
 /*.code-workspace
 /.vscode/
 /books/*
