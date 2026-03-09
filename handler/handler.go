@@ -205,7 +205,7 @@ func (h *ServerHandler) Push(ctx context.Context, req *pb.PostBook, rsp *pb.Stat
 
 	filename := uuid.New().String()
 
-	log.Info().Msg("--| New file |--")
+	// log.Info().Msg("--| New file |--")
 	log.Info().Msg("Uploaded File: " + filename)
 
 	bookFile, err := os.CreateTemp("books", filename+"-*.pdf")
