@@ -25,7 +25,9 @@ var (
 )
 
 func TestHome(t *testing.T) {
-	go internal.InitServer()
+	readyCh := make(chan struct{})
+	go internal.InitServerWithReady(readyCh)
+	<-readyCh
 
 	c := mhttp.NewClient(
 		client.ContentType("application/json"),
@@ -57,7 +59,9 @@ func TestHome(t *testing.T) {
 }
 
 func TestPush(t *testing.T) {
-	go internal.InitServer()
+	readyCh := make(chan struct{})
+	go internal.InitServerWithReady(readyCh)
+	<-readyCh
 
 	c := mhttp.NewClient(
 		client.ContentType("application/json"),
@@ -122,7 +126,9 @@ func TestPush(t *testing.T) {
 }
 
 func TestBook(t *testing.T) {
-	go internal.InitServer()
+	readyCh := make(chan struct{})
+	go internal.InitServerWithReady(readyCh)
+	<-readyCh
 
 	c := mhttp.NewClient(
 		client.ContentType("application/json"),
@@ -155,7 +161,9 @@ func TestBook(t *testing.T) {
 }
 
 func TestGetAllBooks(t *testing.T) {
-	go internal.InitServer()
+	readyCh := make(chan struct{})
+	go internal.InitServerWithReady(readyCh)
+	<-readyCh
 
 	c := mhttp.NewClient(
 		client.ContentType("application/json"),
@@ -190,7 +198,9 @@ func TestGetAllBooks(t *testing.T) {
 }
 
 func TestGetAllBooksAndSort(t *testing.T) {
-	go internal.InitServer()
+	readyCh := make(chan struct{})
+	go internal.InitServerWithReady(readyCh)
+	<-readyCh
 
 	c := mhttp.NewClient(
 		client.ContentType("application/json"),

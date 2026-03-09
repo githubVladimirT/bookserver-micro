@@ -21,6 +21,10 @@ import (
 )
 
 func InitServer() {
+	InitServerWithReady(nil)
+}
+
+func InitServerWithReady(readyCh chan<- struct{}) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -58,6 +62,10 @@ func InitServer() {
 
 	if err := pb.RegisterBookServerServer(srv.Server(), eh); err != nil {
 		logger.Fatal(ctx, err)
+	}
+
+	if readyCh != nil {
+		close(readyCh)
 	}
 
 	if err := srv.Run(); err != nil {
