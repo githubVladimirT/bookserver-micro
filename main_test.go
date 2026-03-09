@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"slices"
@@ -17,8 +18,11 @@ import (
 	"github.com/githubVladimirT/bookserver-micro/internal"
 )
 
-const URL = "http://127.0.0.1:8080"
-const TestBookPath = "./testbooks/TestBookBytes.pdf"
+var (
+	URL          = "http://127.0.0.1:8080"
+	projectRoot  = internal.GetProjectRoot()
+	TestBookPath = filepath.Join(projectRoot, "testbooks/TestBookBytes.pdf")
+)
 
 func TestHome(t *testing.T) {
 	go internal.InitServer()
@@ -77,23 +81,43 @@ func TestPush(t *testing.T) {
 		return
 	}
 
-	book := &pb.PostBook{
-		BookTitle: "TestBook",
-		Author:    "TestAuthor",
-		Genre:     "TestGenre",
-		Year:      "2023",
-		BookBytes: book_bytes,
+	books := []*pb.PostBook{
+		{
+			BookTitle: "TestBook",
+			Author:    "TestAuthor",
+			Genre:     "TestGenre",
+			Year:      "2023",
+			BookBytes: book_bytes,
+		},
+		{
+			BookTitle: "TestBook1",
+			Author:    "TestAuthor1",
+			Genre:     "TestGenre1",
+			Year:      "2022",
+			BookBytes: book_bytes,
+		},
+		{
+			BookTitle: "TestBook2",
+			Author:    "TestAuthor2",
+			Genre:     "TestGenre2",
+			Year:      "2021",
+			BookBytes: book_bytes,
+		},
 	}
 
-	rspp, err := mc.Push(context.TODO(), book)
-	if err != nil {
-		t.Errorf(err.Error())
-		return
-	}
+	for i := range books {
+		book := books[i]
 
-	if rspp.BookId == "-1" {
-		t.Errorf("invalid rsp received: %#+v", rspp)
-		return
+		rspp, err := mc.Push(context.TODO(), book)
+		if err != nil {
+			t.Errorf(err.Error())
+			return
+		}
+
+		if rspp.BookId == "-1" {
+			t.Errorf("invalid rsp received: %#+v", rspp)
+			return
+		}
 	}
 }
 

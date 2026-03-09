@@ -2,6 +2,9 @@ package internal
 
 import (
 	"context"
+	"os"
+	"path/filepath"
+	"runtime"
 
 	"github.com/githubVladimirT/bookserver-micro/handler"
 	pb "github.com/githubVladimirT/bookserver-micro/proto"
@@ -20,6 +23,11 @@ import (
 func InitServer() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	err := InitDirectories()
+	if err != nil {
+		logger.Fatal(ctx, err)
+	}
 
 	options := append([]micro.Option{},
 		micro.Server(httpsrv.NewServer(
@@ -55,4 +63,39 @@ func InitServer() {
 	if err := srv.Run(); err != nil {
 		logger.Fatal(ctx, err)
 	}
+}
+
+func InitDirectories() error {
+	projectRoot := GetProjectRoot()
+	books_path := filepath.Join(projectRoot, "books/")
+	db_path := filepath.Join(projectRoot, "db/sqlite3/")
+
+	err := os.MkdirAll(books_path, 0755)
+	if err != nil {
+		return err
+	}
+
+	err = os.MkdirAll(db_path, 0755)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func GetProjectRoot() string {
+	_, b, _, _ := runtime.Caller(0)
+	dir := filepath.Dir(b)
+
+	for {
+		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+			return dir
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			break
+		}
+		dir = parent
+	}
+	return ""
 }
