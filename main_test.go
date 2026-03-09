@@ -25,8 +25,12 @@ var (
 )
 
 func TestHome(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	readyCh := make(chan struct{})
-	go internal.InitServerWithReady(readyCh)
+	shutdown := internal.InitServerWithReady(ctx, readyCh)
+	defer shutdown()
 	<-readyCh
 
 	c := mhttp.NewClient(
@@ -58,8 +62,12 @@ func TestHome(t *testing.T) {
 }
 
 func TestPush(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	readyCh := make(chan struct{})
-	go internal.InitServerWithReady(readyCh)
+	shutdown := internal.InitServerWithReady(ctx, readyCh)
+	defer shutdown()
 	<-readyCh
 
 	c := mhttp.NewClient(
@@ -123,8 +131,12 @@ func TestPush(t *testing.T) {
 }
 
 func TestBook(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	readyCh := make(chan struct{})
-	go internal.InitServerWithReady(readyCh)
+	shutdown := internal.InitServerWithReady(ctx, readyCh)
+	defer shutdown()
 	<-readyCh
 
 	c := mhttp.NewClient(
@@ -157,8 +169,12 @@ func TestBook(t *testing.T) {
 }
 
 func TestGetAllBooks(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	readyCh := make(chan struct{})
-	go internal.InitServerWithReady(readyCh)
+	shutdown := internal.InitServerWithReady(ctx, readyCh)
+	defer shutdown()
 	<-readyCh
 
 	c := mhttp.NewClient(
@@ -193,8 +209,12 @@ func TestGetAllBooks(t *testing.T) {
 }
 
 func TestGetAllBooksAndSort(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	readyCh := make(chan struct{})
-	go internal.InitServerWithReady(readyCh)
+	shutdown := internal.InitServerWithReady(ctx, readyCh)
+	defer shutdown()
 	<-readyCh
 
 	c := mhttp.NewClient(

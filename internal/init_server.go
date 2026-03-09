@@ -2,6 +2,8 @@ package internal
 
 import (
 	"context"
+	"time"
+
 	// "fmt"
 	// "net"
 	"os"
@@ -26,13 +28,12 @@ import (
 )
 
 func InitServer() {
-	InitServerWithReady(nil)
-}
-
-func InitServerWithReady(readyCh chan<- struct{}) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	InitServerWithReady(ctx, nil)
+}
 
+func InitServerWithReady(ctx context.Context, readyCh chan<- struct{}) func() {
 	logger := micro_logger.NewLogger()
 
 	err := InitDirectories()
@@ -79,11 +80,21 @@ func InitServerWithReady(readyCh chan<- struct{}) {
 		}
 	}()
 
+	for !srv.Ready() {
+		select {
+		case <-ctx.Done():
+			return func() {}
+		case <-time.After(10 * time.Millisecond):
+		}
+	}
+
 	if readyCh != nil {
 		close(readyCh)
 	}
 
-	<-ctx.Done()
+	return func() {
+		srv.Stop()
+	}
 }
 
 func InitDirectories() error {
