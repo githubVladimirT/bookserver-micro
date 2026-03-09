@@ -2,9 +2,14 @@ package internal
 
 import (
 	"context"
+	// "fmt"
+	// "net"
 	"os"
 	"path/filepath"
 	"runtime"
+
+	// "strconv"
+	// "strings"
 
 	"github.com/githubVladimirT/bookserver-micro/handler"
 	pb "github.com/githubVladimirT/bookserver-micro/proto"
@@ -35,11 +40,13 @@ func InitServerWithReady(readyCh chan<- struct{}) {
 		logger.Fatal(ctx, err.Error())
 	}
 
+	// address := findAvailablePort(":8080")
+
 	options := append([]micro.Option{},
 		micro.Server(httpsrv.NewServer(
 			server.Name("bookserver-micro"),
 			server.Version("1.0"),
-			server.Address(":8080"),
+			server.Address(":8080"), // address
 			server.Context(ctx),
 			server.Codec("application/json", jsonpbcodec.NewCodec()),
 		)),
@@ -66,13 +73,17 @@ func InitServerWithReady(readyCh chan<- struct{}) {
 		logger.Fatal(ctx, err.Error())
 	}
 
+	go func() {
+		if err := srv.Run(); err != nil {
+			logger.Fatal(ctx, err.Error())
+		}
+	}()
+
 	if readyCh != nil {
 		close(readyCh)
 	}
 
-	if err := srv.Run(); err != nil {
-		logger.Fatal(ctx, err.Error())
-	}
+	<-ctx.Done()
 }
 
 func InitDirectories() error {
@@ -109,3 +120,33 @@ func GetProjectRoot() string {
 	}
 	return ""
 }
+
+// func findAvailablePort(initialAddress string) string {
+// 	host, portStr, err := net.SplitHostPort(initialAddress)
+// 	if err != nil {
+// 		return initialAddress
+// 	}
+
+// 	port, err := strconv.Atoi(portStr)
+// 	if err != nil {
+// 		return initialAddress
+// 	}
+
+// 	for i := 0; i < 100; i++ {
+// 		testAddress := fmt.Sprintf("%s:%d", host, port+i)
+// 		ln, err := net.Listen("tcp", testAddress)
+// 		if err == nil {
+// 			ln.Close()
+// 			return testAddress
+// 		}
+
+// 		if strings.Contains(err.Error(), "address already in use") ||
+// 			strings.Contains(err.Error(), "bind: address already in use") {
+// 			continue
+// 		}
+
+// 		return testAddress
+// 	}
+
+// 	return fmt.Sprintf("%s:%d", host, port)
+// }
