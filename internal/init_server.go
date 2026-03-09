@@ -14,7 +14,7 @@ import (
 	"go.unistack.org/micro/v3"
 
 	"go.unistack.org/micro/v3/client"
-	"go.unistack.org/micro/v3/logger"
+	micro_logger "go.unistack.org/micro/v3/logger"
 	"go.unistack.org/micro/v3/server"
 
 	jsonpbcodec "go.unistack.org/micro-codec-jsonpb/v3"
@@ -28,9 +28,11 @@ func InitServerWithReady(readyCh chan<- struct{}) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	logger := micro_logger.NewLogger()
+
 	err := InitDirectories()
 	if err != nil {
-		logger.Fatal(ctx, err)
+		logger.Fatal(ctx, err.Error())
 	}
 
 	options := append([]micro.Option{},
@@ -55,13 +57,13 @@ func InitServerWithReady(readyCh chan<- struct{}) {
 	srv := micro.NewService(options...)
 
 	if err := srv.Init(); err != nil {
-		logger.Fatal(ctx, err)
+		logger.Fatal(ctx, err.Error())
 	}
 
 	eh := handler.NewServerHandler()
 
 	if err := pb.RegisterBookServerServer(srv.Server(), eh); err != nil {
-		logger.Fatal(ctx, err)
+		logger.Fatal(ctx, err.Error())
 	}
 
 	if readyCh != nil {
@@ -69,7 +71,7 @@ func InitServerWithReady(readyCh chan<- struct{}) {
 	}
 
 	if err := srv.Run(); err != nil {
-		logger.Fatal(ctx, err)
+		logger.Fatal(ctx, err.Error())
 	}
 }
 

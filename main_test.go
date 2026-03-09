@@ -35,7 +35,7 @@ func TestHome(t *testing.T) {
 	)
 
 	if err := c.Init(); err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf("client init failed: %v", err)
 	}
 
 	cli := client.NewClientCallOptions(
@@ -48,8 +48,7 @@ func TestHome(t *testing.T) {
 	req := &pb.Empty{}
 	rsp, err := mc.Home(context.TODO(), req)
 	if err != nil {
-		t.Errorf(err.Error())
-		return
+		t.Fatalf("Home call failed: %v", err)
 	}
 
 	if rsp.Description != "HomePage" {
@@ -69,7 +68,7 @@ func TestPush(t *testing.T) {
 	)
 
 	if err := c.Init(); err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf("client init failed: %v", err)
 	}
 
 	cli := client.NewClientCallOptions(
@@ -81,8 +80,7 @@ func TestPush(t *testing.T) {
 
 	book_bytes, err := os.ReadFile(TestBookPath)
 	if err != nil {
-		t.Errorf(err.Error())
-		return
+		t.Fatalf("failed to read test book: %v", err)
 	}
 
 	books := []*pb.PostBook{
@@ -114,8 +112,7 @@ func TestPush(t *testing.T) {
 
 		rspp, err := mc.Push(context.TODO(), book)
 		if err != nil {
-			t.Errorf(err.Error())
-			return
+			t.Fatalf("Push call failed: %v", err)
 		}
 
 		if rspp.BookId == "-1" {
@@ -136,7 +133,7 @@ func TestBook(t *testing.T) {
 	)
 
 	if err := c.Init(); err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf("client init failed: %v", err)
 	}
 
 	cli := client.NewClientCallOptions(
@@ -148,8 +145,7 @@ func TestBook(t *testing.T) {
 
 	rspb, err := mc.Book(context.TODO(), &pb.GetBook{BookTitle: "TestBook"})
 	if err != nil {
-		t.Errorf(err.Error())
-		return
+		t.Fatalf("Book call failed: %v", err)
 	}
 
 	if rspb.Title != "TestBook" || rspb.Author != "TestAuthor" || rspb.Genre != "TestGenre" || rspb.Year != "2023" {
@@ -171,7 +167,7 @@ func TestGetAllBooks(t *testing.T) {
 	)
 
 	if err := c.Init(); err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf("client init failed: %v", err)
 	}
 
 	cli := client.NewClientCallOptions(
@@ -183,8 +179,7 @@ func TestGetAllBooks(t *testing.T) {
 
 	rspgab, err := mc.GetAllBooks(context.TODO(), &pb.Empty{})
 	if err != nil {
-		t.Errorf(err.Error())
-		return
+		t.Fatalf("GetAllBooks call failed: %v", err)
 	}
 
 	if !slices.Contains(rspgab.Books, "TestBook") {
