@@ -6,7 +6,6 @@ require (
 	github.com/blockloop/scan/v2 v2.5.0
 	github.com/google/uuid v1.6.0
 	github.com/mattn/go-sqlite3 v1.14.22
-	github.com/rs/zerolog v1.33.0
 	go.unistack.org/micro-client-http/v3 v3.9.15
 	go.unistack.org/micro-codec-jsonpb/v3 v3.10.6
 	go.unistack.org/micro-proto/v3 v3.4.1
@@ -18,8 +17,6 @@ require (
 require (
 	github.com/google/gnostic v0.7.0 // indirect
 	github.com/google/gnostic-models v0.6.9 // indirect
-	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.20 // indirect
 	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
@@ -58,5 +55,6 @@ require (
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/stretchr/testify v1.10.0 // indirect
 	go.uber.org/automaxprocs v1.6.0 // indirect
+	go.unistack.org/micro-codec-json/v3 v3.10.3 // indirect
 	golang.org/x/exp v0.0.0-20241210194714-1829a127f884 // indirect
 )

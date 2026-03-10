@@ -4,14 +4,9 @@ import (
 	"context"
 	"time"
 
-	// "fmt"
-	// "net"
 	"os"
 	"path/filepath"
 	"runtime"
-
-	// "strconv"
-	// "strings"
 
 	"github.com/githubVladimirT/bookserver-micro/handler"
 	pb "github.com/githubVladimirT/bookserver-micro/proto"
@@ -21,41 +16,51 @@ import (
 	"go.unistack.org/micro/v3"
 
 	"go.unistack.org/micro/v3/client"
-	micro_logger "go.unistack.org/micro/v3/logger"
+	micro_logger "go.unistack.org/micro/v3/logger/slog"
 	"go.unistack.org/micro/v3/server"
 
-	jsonpbcodec "go.unistack.org/micro-codec-jsonpb/v3"
+	// jsonpbcodec "go.unistack.org/micro-codec-jsonpb/v3"
+	jsoncodec "go.unistack.org/micro-codec-jsonpb/v3"
 )
 
-func InitServer() {
+func InitServer() (func(), string) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	InitServerWithReady(ctx, nil)
+
+	readyCh := make(chan struct{})
+	shutdown, address := InitServerWithReady(ctx, readyCh)
+
+	<-readyCh
+
+	return shutdown, address
 }
 
-func InitServerWithReady(ctx context.Context, readyCh chan<- struct{}) func() {
+func InitServerWithReady(ctx context.Context, readyCh chan<- struct{}) (func(), string) {
 	logger := micro_logger.NewLogger()
+	if err := logger.Init(); err != nil {
+		panic(err)
+	}
 
 	err := InitDirectories()
 	if err != nil {
 		logger.Fatal(ctx, err.Error())
 	}
 
-	// address := findAvailablePort(":8080")
+	address := "127.0.0.1:0"
 
 	options := append([]micro.Option{},
 		micro.Server(httpsrv.NewServer(
 			server.Name("bookserver-micro"),
 			server.Version("1.0"),
-			server.Address(":8080"), // address
+			server.Address(address),
 			server.Context(ctx),
-			server.Codec("application/json", jsonpbcodec.NewCodec()),
+			server.Codec("application/json", jsoncodec.NewCodec()),
 		)),
 
 		micro.Client(mhttp.NewClient(
 			client.Name("bookserver-micro-client"),
 			client.Context(ctx),
-			client.Codec("application/json", jsonpbcodec.NewCodec()),
+			client.Codec("application/json", jsoncodec.NewCodec()),
 			client.ContentType("application/json"),
 		)),
 
@@ -83,7 +88,7 @@ func InitServerWithReady(ctx context.Context, readyCh chan<- struct{}) func() {
 	for !srv.Ready() {
 		select {
 		case <-ctx.Done():
-			return func() {}
+			return func() {}, ""
 		case <-time.After(10 * time.Millisecond):
 		}
 	}
@@ -92,9 +97,7 @@ func InitServerWithReady(ctx context.Context, readyCh chan<- struct{}) func() {
 		close(readyCh)
 	}
 
-	return func() {
-		srv.Stop()
-	}
+	return func() { srv.Stop() }, srv.Server().Options().Address
 }
 
 func InitDirectories() error {
@@ -131,33 +134,3 @@ func GetProjectRoot() string {
 	}
 	return ""
 }
-
-// func findAvailablePort(initialAddress string) string {
-// 	host, portStr, err := net.SplitHostPort(initialAddress)
-// 	if err != nil {
-// 		return initialAddress
-// 	}
-
-// 	port, err := strconv.Atoi(portStr)
-// 	if err != nil {
-// 		return initialAddress
-// 	}
-
-// 	for i := 0; i < 100; i++ {
-// 		testAddress := fmt.Sprintf("%s:%d", host, port+i)
-// 		ln, err := net.Listen("tcp", testAddress)
-// 		if err == nil {
-// 			ln.Close()
-// 			return testAddress
-// 		}
-
-// 		if strings.Contains(err.Error(), "address already in use") ||
-// 			strings.Contains(err.Error(), "bind: address already in use") {
-// 			continue
-// 		}
-
-// 		return testAddress
-// 	}
-
-// 	return fmt.Sprintf("%s:%d", host, port)
-// }

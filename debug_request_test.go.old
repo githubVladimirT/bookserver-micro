@@ -1,0 +1,61 @@
+package main
+
+import (
+	"context"
+	"testing"
+	"time"
+
+	"github.com/githubVladimirT/bookserver-micro/internal"
+	pb "github.com/githubVladimirT/bookserver-micro/proto"
+
+	mhttp "go.unistack.org/micro-client-http/v3"
+	jsoncodec "go.unistack.org/micro-codec-json/v3"
+	"go.unistack.org/micro/v3/client"
+)
+
+func TestDebugRequestContentType(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	readyCh := make(chan struct{})
+	shutdown, address := internal.InitServerWithReady(ctx, readyCh)
+	defer shutdown()
+	<-readyCh
+
+	time.Sleep(100 * time.Millisecond)
+
+	// Create client with ContentType option
+	c := mhttp.NewClient(
+		client.ContentType("application/json"),
+		client.Codec("application/json", jsoncodec.NewCodec()),
+	)
+
+	if err := c.Init(); err != nil {
+		t.Fatalf("client init failed: %v", err)
+	}
+
+	// Check client options
+	t.Logf("Client ContentType: %s", c.Options().ContentType)
+
+	cli := client.NewClientCallOptions(
+		c,
+		client.WithAddress(address),
+	)
+
+	mc := pb.NewBookServerClient("bookserver-micro-client", cli)
+
+	// Create request manually to check its content type
+	req := &pb.Empty{}
+	microReq := c.NewRequest("bookserver-micro", "BookServer.Home", req)
+	t.Logf("Request ContentType: %s", microReq.ContentType())
+	t.Logf("Request Service: %s", microReq.Service())
+	t.Logf("Request Method: %s", microReq.Method())
+	t.Logf("Request Endpoint: %s", microReq.Endpoint())
+
+	rsp, err := mc.Home(context.TODO(), req)
+	if err != nil {
+		t.Fatalf("Home call failed: %v", err)
+	}
+
+	t.Logf("Response: %+v", rsp)
+}

@@ -1,0 +1,39 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"io"
+	"net/http"
+	"testing"
+	"time"
+
+	"github.com/githubVladimirT/bookserver-micro/internal"
+)
+
+func TestDebugHTTP(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	readyCh := make(chan struct{})
+	shutdown, address := internal.InitServerWithReady(ctx, readyCh)
+	defer shutdown()
+	<-readyCh
+
+	// Make a raw HTTP request to see what headers are returned
+	url := fmt.Sprintf("http://%s/", address)
+	
+	time.Sleep(100 * time.Millisecond)
+	
+	resp, err := http.Get(url)
+	if err != nil {
+		t.Fatalf("HTTP GET failed: %v", err)
+	}
+	defer resp.Body.Close()
+	
+	t.Logf("Status: %s", resp.Status)
+	t.Logf("Content-Type header: %s", resp.Header.Get("Content-Type"))
+	
+	body, _ := io.ReadAll(resp.Body)
+	t.Logf("Body: %s", string(body))
+}

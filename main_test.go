@@ -12,14 +12,13 @@ import (
 	pb "github.com/githubVladimirT/bookserver-micro/proto"
 
 	mhttp "go.unistack.org/micro-client-http/v3"
-	jsonpbcodec "go.unistack.org/micro-codec-jsonpb/v3"
+	jsoncodec "go.unistack.org/micro-codec-jsonpb/v3"
 	"go.unistack.org/micro/v3/client"
 
 	"github.com/githubVladimirT/bookserver-micro/internal"
 )
 
 var (
-	URL          = "http://127.0.0.1:8080"
 	projectRoot  = internal.GetProjectRoot()
 	TestBookPath = filepath.Join(projectRoot, "testbooks/TestBookBytes.pdf")
 )
@@ -29,13 +28,13 @@ func TestHome(t *testing.T) {
 	defer cancel()
 
 	readyCh := make(chan struct{})
-	shutdown := internal.InitServerWithReady(ctx, readyCh)
+	shutdown, address := internal.InitServerWithReady(ctx, readyCh)
 	defer shutdown()
 	<-readyCh
 
 	c := mhttp.NewClient(
 		client.ContentType("application/json"),
-		client.Codec("application/json", jsonpbcodec.NewCodec()),
+		client.Codec("application/json", jsoncodec.NewCodec()),
 	)
 
 	if err := c.Init(); err != nil {
@@ -44,7 +43,7 @@ func TestHome(t *testing.T) {
 
 	cli := client.NewClientCallOptions(
 		c,
-		client.WithAddress(URL),
+		client.WithAddress(address),
 	)
 
 	mc := pb.NewBookServerClient("bookserver-micro-client", cli)
@@ -66,13 +65,14 @@ func TestPush(t *testing.T) {
 	defer cancel()
 
 	readyCh := make(chan struct{})
-	shutdown := internal.InitServerWithReady(ctx, readyCh)
+	shutdown, address := internal.InitServerWithReady(ctx, readyCh)
 	defer shutdown()
 	<-readyCh
 
 	c := mhttp.NewClient(
 		client.ContentType("application/json"),
-		client.Codec("application/json", jsonpbcodec.NewCodec()),
+		client.Codec("application/json",
+			jsoncodec.NewCodec()),
 	)
 
 	if err := c.Init(); err != nil {
@@ -81,7 +81,7 @@ func TestPush(t *testing.T) {
 
 	cli := client.NewClientCallOptions(
 		c,
-		client.WithAddress(URL),
+		client.WithAddress(address),
 	)
 
 	mc := pb.NewBookServerClient("bookserver-micro-client", cli)
@@ -135,13 +135,13 @@ func TestBook(t *testing.T) {
 	defer cancel()
 
 	readyCh := make(chan struct{})
-	shutdown := internal.InitServerWithReady(ctx, readyCh)
+	shutdown, address := internal.InitServerWithReady(ctx, readyCh)
 	defer shutdown()
 	<-readyCh
 
 	c := mhttp.NewClient(
 		client.ContentType("application/json"),
-		client.Codec("application/json", jsonpbcodec.NewCodec()),
+		client.Codec("application/json", jsoncodec.NewCodec()),
 	)
 
 	if err := c.Init(); err != nil {
@@ -150,7 +150,7 @@ func TestBook(t *testing.T) {
 
 	cli := client.NewClientCallOptions(
 		c,
-		client.WithAddress(URL),
+		client.WithAddress(address),
 	)
 
 	mc := pb.NewBookServerClient("bookserver-micro-client", cli)
@@ -173,13 +173,13 @@ func TestGetAllBooks(t *testing.T) {
 	defer cancel()
 
 	readyCh := make(chan struct{})
-	shutdown := internal.InitServerWithReady(ctx, readyCh)
+	shutdown, address := internal.InitServerWithReady(ctx, readyCh)
 	defer shutdown()
 	<-readyCh
 
 	c := mhttp.NewClient(
 		client.ContentType("application/json"),
-		client.Codec("application/json", jsonpbcodec.NewCodec()),
+		client.Codec("application/json", jsoncodec.NewCodec()),
 	)
 
 	if err := c.Init(); err != nil {
@@ -188,7 +188,7 @@ func TestGetAllBooks(t *testing.T) {
 
 	cli := client.NewClientCallOptions(
 		c,
-		client.WithAddress(URL),
+		client.WithAddress(address),
 	)
 
 	mc := pb.NewBookServerClient("bookserver-micro-client", cli)
@@ -213,13 +213,13 @@ func TestGetAllBooksAndSort(t *testing.T) {
 	defer cancel()
 
 	readyCh := make(chan struct{})
-	shutdown := internal.InitServerWithReady(ctx, readyCh)
+	shutdown, address := internal.InitServerWithReady(ctx, readyCh)
 	defer shutdown()
 	<-readyCh
 
 	c := mhttp.NewClient(
 		client.ContentType("application/json"),
-		client.Codec("application/json", jsonpbcodec.NewCodec()),
+		client.Codec("application/json", jsoncodec.NewCodec()),
 	)
 	if err := c.Init(); err != nil {
 		t.Fatalf("client init failed: %v", err)
@@ -227,7 +227,7 @@ func TestGetAllBooksAndSort(t *testing.T) {
 
 	cli := client.NewClientCallOptions(
 		c,
-		client.WithAddress(URL),
+		client.WithAddress(address),
 	)
 	mc := pb.NewBookServerClient("bookserver-micro-client", cli)
 
