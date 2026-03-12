@@ -8,7 +8,7 @@ import (
 	"os"
 	"strconv"
 
-	pb "github.com/githubVladimirT/bookserver-micro/proto"
+	pb "github.com/githubVladimirT/bookserver-micro/http/proto"
 
 	"github.com/blockloop/scan/v2"
 	"github.com/google/uuid"
@@ -16,9 +16,9 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/jmoiron/sqlx"
-	httpsrv "go.unistack.org/micro-server-http/v3"
-	"go.unistack.org/micro/v3/logger"
-	"go.unistack.org/micro/v3/logger/slog"
+	httpsrv "go.unistack.org/micro-server-http/v4"
+	"go.unistack.org/micro/v4/logger"
+	"go.unistack.org/micro/v4/logger/slog"
 )
 
 // DB Queries
@@ -90,14 +90,14 @@ func NewServerHandler() *ServerHandler {
 	return &ServerHandler{db: InitDB()}
 }
 
-func (h *ServerHandler) Home(ctx context.Context, req *pb.Empty, rsp *pb.StatusRsp) error {
+func (h *ServerHandler) Home(ctx context.Context, req *pb.EmptyReq, rsp *pb.StatusRsp) error {
 	rsp.Description = "HomePage"
 
-	httpsrv.SetRspCode(ctx, http.StatusOK)
+	httpsrv.SetResponseStatusCode(ctx, http.StatusOK)
 	return nil
 }
 
-func (h *ServerHandler) GetAllBooks(ctx context.Context, req *pb.Empty, rsp *pb.GetAllBooks) error {
+func (h *ServerHandler) GetAllBooks(ctx context.Context, req *pb.EmptyReq, rsp *pb.GetAllBooksRsp) error {
 	log := InitLog()
 
 	var books []string
@@ -105,26 +105,24 @@ func (h *ServerHandler) GetAllBooks(ctx context.Context, req *pb.Empty, rsp *pb.
 	rows, err := h.db.Query(get_all_books)
 	if err != nil {
 		log.Error(ctx, err.Error())
-		httpsrv.SetRspHeader(ctx, http.Header{"Content-Type": []string{"application/json"}})
-		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
+		httpsrv.SetResponseStatusCode(ctx, http.StatusBadRequest)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
 	}
 
 	err = scan.Rows(&books, rows)
 	if err != nil {
 		log.Error(ctx, err.Error())
-		httpsrv.SetRspHeader(ctx, http.Header{"Content-Type": []string{"application/json"}})
-		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
+		httpsrv.SetResponseStatusCode(ctx, http.StatusBadRequest)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
 	}
 
 	rsp.Books = books
-	httpsrv.SetRspCode(ctx, http.StatusOK)
+	httpsrv.SetResponseStatusCode(ctx, http.StatusOK)
 
 	return nil
 }
 
-func (h *ServerHandler) GetAllBooksAndSort(ctx context.Context, req *pb.SortType, rsp *pb.GetAllBooksAndSort) error {
+func (h *ServerHandler) GetAllBooksAndSort(ctx context.Context, req *pb.SortTypeReq, rsp *pb.GetAllBooksAndSortRsp) error {
 	log := InitLog()
 
 	allowedSortFields := map[string]bool{
@@ -144,23 +142,21 @@ func (h *ServerHandler) GetAllBooksAndSort(ctx context.Context, req *pb.SortType
 
 	if err != nil {
 		log.Error(ctx, err.Error())
-		httpsrv.SetRspHeader(ctx, http.Header{"Content-Type": []string{"application/json"}})
-		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
+		httpsrv.SetResponseStatusCode(ctx, http.StatusBadRequest)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
 	}
 
 	if len(books) == 0 {
-		httpsrv.SetRspHeader(ctx, http.Header{"Content-Type": []string{"application/json"}})
-		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
+		httpsrv.SetResponseStatusCode(ctx, http.StatusBadRequest)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "No books found"})
 	}
 
 	rsp.Books = books
-	httpsrv.SetRspCode(ctx, http.StatusOK)
+	httpsrv.SetResponseStatusCode(ctx, http.StatusOK)
 
 	return nil
 }
-func (h *ServerHandler) Book(ctx context.Context, req *pb.GetBook, rsp *pb.GetBookRsp) error {
+func (h *ServerHandler) Book(ctx context.Context, req *pb.GetBookReq, rsp *pb.GetBookRsp) error {
 	log := InitLog()
 
 	var books []pb.GetBookRsp
@@ -168,8 +164,7 @@ func (h *ServerHandler) Book(ctx context.Context, req *pb.GetBook, rsp *pb.GetBo
 	rows, err := h.db.Queryx(selectdata, req.BookTitle)
 	if err != nil {
 		log.Error(ctx, err.Error())
-		httpsrv.SetRspHeader(ctx, http.Header{"Content-Type": []string{"application/json"}})
-		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
+		httpsrv.SetResponseStatusCode(ctx, http.StatusBadRequest)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
 	}
 	defer rows.Close()
@@ -178,16 +173,14 @@ func (h *ServerHandler) Book(ctx context.Context, req *pb.GetBook, rsp *pb.GetBo
 		var b pb.GetBookRsp
 		if err := rows.StructScan(&b); err != nil {
 			log.Error(ctx, err.Error())
-			httpsrv.SetRspHeader(ctx, http.Header{"Content-Type": []string{"application/json"}})
-			httpsrv.SetRspCode(ctx, http.StatusBadRequest)
+			httpsrv.SetResponseStatusCode(ctx, http.StatusBadRequest)
 			return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
 		}
 		books = append(books, b)
 	}
 
 	if len(books) == 0 {
-		httpsrv.SetRspHeader(ctx, http.Header{"Content-Type": []string{"application/json"}})
-		httpsrv.SetRspCode(ctx, http.StatusNotFound)
+		httpsrv.SetResponseStatusCode(ctx, http.StatusNotFound)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "book not found"})
 	}
 
@@ -196,11 +189,11 @@ func (h *ServerHandler) Book(ctx context.Context, req *pb.GetBook, rsp *pb.GetBo
 	rsp.Genre = books[0].Genre
 	rsp.Year = books[0].Year
 
-	httpsrv.SetRspCode(ctx, http.StatusOK)
+	httpsrv.SetResponseStatusCode(ctx, http.StatusOK)
 	return nil
 }
 
-func (h *ServerHandler) Push(ctx context.Context, req *pb.PostBook, rsp *pb.StatusUploadedBookRsp) error {
+func (h *ServerHandler) Push(ctx context.Context, req *pb.PostBookReq, rsp *pb.StatusUploadedBookRsp) error {
 	log := InitLog()
 
 	file := req.BookBytes
@@ -217,7 +210,7 @@ func (h *ServerHandler) Push(ctx context.Context, req *pb.PostBook, rsp *pb.Stat
 	bookFile, err := os.CreateTemp("books", filename+"-*.pdf")
 	if err != nil {
 		log.Error(ctx, err.Error())
-		httpsrv.SetRspCode(ctx, http.StatusBadGateway)
+		httpsrv.SetResponseStatusCode(ctx, http.StatusBadGateway)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "temp file creation error"})
 	}
 	defer bookFile.Close()
@@ -225,7 +218,7 @@ func (h *ServerHandler) Push(ctx context.Context, req *pb.PostBook, rsp *pb.Stat
 	_, err = io.Copy(bookFile, bytes.NewReader(file))
 	if err != nil {
 		log.Error(ctx, err.Error())
-		httpsrv.SetRspCode(ctx, http.StatusBadGateway)
+		httpsrv.SetResponseStatusCode(ctx, http.StatusBadGateway)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "file creation error"})
 	}
 
@@ -242,13 +235,13 @@ func (h *ServerHandler) Push(ctx context.Context, req *pb.PostBook, rsp *pb.Stat
 	book_id, err = h.insertNewBook(book)
 	if err != nil {
 		log.Error(ctx, err.Error())
-		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
+		httpsrv.SetResponseStatusCode(ctx, http.StatusBadRequest)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
 	}
 
 	rsp.BookId = strconv.Itoa(book_id)
 
-	httpsrv.SetRspCode(ctx, http.StatusCreated)
+	httpsrv.SetResponseStatusCode(ctx, http.StatusCreated)
 	return nil
 }
 

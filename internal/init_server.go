@@ -8,15 +8,15 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/githubVladimirT/bookserver-micro/handler"
+	"github.com/githubVladimirT/bookserver-micro/http/handler"
 	// pb "github.com/githubVladimirT/bookserver-micro/proto"
 
 	// mhttp "go.unistack.org/micro-client-http/v3"
 	// httpsrv "go.unistack.org/micro-server-http/v3"
-	"go.unistack.org/micro/v3"
-	"go.unistack.org/micro/v3/server"
+	"go.unistack.org/micro/v4"
+	"go.unistack.org/micro/v4/server"
 
-	micro_logger "go.unistack.org/micro/v3/logger/slog"
+	micro_logger "go.unistack.org/micro/v4/logger/slog"
 )
 
 func InitServerWithReady(ctx context.Context, readyCh chan<- struct{}) micro.Service {

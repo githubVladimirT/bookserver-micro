@@ -1,0 +1,127 @@
+syntax = "proto3";
+
+package bookservermicro;
+option go_package = "github.com/githubVladimirT/bookserver-micro;pb";
+
+import "tag/tag.proto";
+import "api/annotations.proto";
+import "openapiv3/annotations.proto";
+import "google/protobuf/wrappers.proto";
+
+service BookServer {
+  rpc Home(EmptyReq) returns (StatusRsp) {
+    option (micro.openapiv3.openapiv3_operation) = {
+      operation_id: "Home";
+      responses   : {
+        default: {
+          reference: {
+            _ref: ".bookservermicro.ErrorRsp";
+          };
+        };
+      };
+    };
+    option (micro.api.http) = { get: "/"; body: "*"; };
+    option (micro.api.micro_method) = { timeout: "1s"; };
+  };
+  rpc Push(PostBookReq) returns (StatusUploadedBookRsp) {
+    option (micro.openapiv3.openapiv3_operation) = {
+      operation_id: "Push";
+      responses   : {
+        default: {
+          reference: {
+            _ref: ".bookservermicro.ErrorRsp";
+          };
+        };
+      };
+    };
+    option (micro.api.http) = { post: "/push"; body: "*"; };
+    option (micro.api.micro_method) = { timeout: "1s"; };
+  };
+  rpc Book(GetBookReq) returns (GetBookRsp) {
+    option (micro.openapiv3.openapiv3_operation) = {
+      operation_id: "Book";
+      responses   : {
+        default: {
+          reference: {
+            _ref: ".bookservermicro.ErrorRsp";
+          };
+        };
+      };
+    };
+    option (micro.api.http) = { get: "/book"; body: "*"; };
+    option (micro.api.micro_method) = { timeout: "1s"; };
+  };
+  rpc GetAllBooks(EmptyReq) returns (GetAllBooksRsp) {
+    option (micro.openapiv3.openapiv3_operation) = {
+      operation_id: "GetAllBooks";
+      responses   : {
+        default: {
+          reference: {
+            _ref: ".bookservermicro.ErrorRsp";
+          };
+        };
+      };
+    };
+    option (micro.api.http) = { get: "/allbooks"; body: "*"; };
+    option (micro.api.micro_method) = { timeout: "1s"; };
+  };
+  rpc GetAllBooksAndSort(SortTypeReq) returns (GetAllBooksAndSortRsp) {
+    option (micro.openapiv3.openapiv3_operation) = {
+      operation_id: "GetAllBooksAndSort";
+      responses   : {
+        default: {
+          reference: {
+            _ref: ".bookservermicro.ErrorRsp";
+          };
+        };
+      };
+    };
+    option (micro.api.http) = { get: "/allbooks"; body: "*"; };
+    option (micro.api.micro_method) = { timeout: "1s"; };
+  };
+};
+
+message EmptyReq {};
+
+message GetBookReq {
+  string book_title = 1;
+};
+
+message SortTypeReq {
+  string sort_type = 1;
+};
+
+message GetAllBooksRsp {
+  repeated string books = 1;
+};
+
+message GetAllBooksAndSortRsp {
+  repeated GetBookRsp books = 1;
+};
+
+message PostBookReq {
+  string book_title = 1;
+  string author     = 2;
+  string genre      = 3;
+  string year       = 4;
+  bytes  book_bytes = 5;
+}
+
+message GetBookRsp {
+  string title  = 1;
+  string author = 2;
+  string genre  = 3;
+  string year   = 4;
+};
+
+message StatusRsp {
+  string description = 1;
+};
+
+message StatusUploadedBookRsp {
+  string book_id = 1;
+};
+
+message ErrorRsp {
+  string msg = 1;
+};
