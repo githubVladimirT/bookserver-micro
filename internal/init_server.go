@@ -9,33 +9,17 @@ import (
 	"runtime"
 
 	"github.com/githubVladimirT/bookserver-micro/handler"
-	pb "github.com/githubVladimirT/bookserver-micro/proto"
+	// pb "github.com/githubVladimirT/bookserver-micro/proto"
 
-	mhttp "go.unistack.org/micro-client-http/v3"
-	httpsrv "go.unistack.org/micro-server-http/v3"
+	// mhttp "go.unistack.org/micro-client-http/v3"
+	// httpsrv "go.unistack.org/micro-server-http/v3"
 	"go.unistack.org/micro/v3"
-
-	"go.unistack.org/micro/v3/client"
-	micro_logger "go.unistack.org/micro/v3/logger/slog"
 	"go.unistack.org/micro/v3/server"
 
-	// jsonpbcodec "go.unistack.org/micro-codec-jsonpb/v3"
-	jsoncodec "go.unistack.org/micro-codec-jsonpb/v3"
+	micro_logger "go.unistack.org/micro/v3/logger/slog"
 )
 
-func InitServer() (func(), string) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	readyCh := make(chan struct{})
-	shutdown, address := InitServerWithReady(ctx, readyCh)
-
-	<-readyCh
-
-	return shutdown, address
-}
-
-func InitServerWithReady(ctx context.Context, readyCh chan<- struct{}) (func(), string) {
+func InitServerWithReady(ctx context.Context, readyCh chan<- struct{}) micro.Service {
 	logger := micro_logger.NewLogger()
 	if err := logger.Init(); err != nil {
 		panic(err)
@@ -46,49 +30,35 @@ func InitServerWithReady(ctx context.Context, readyCh chan<- struct{}) (func(), 
 		logger.Fatal(ctx, err.Error())
 	}
 
-	address := "127.0.0.1:0"
-
-	options := append([]micro.Option{},
-		micro.Server(httpsrv.NewServer(
-			server.Name("bookserver-micro"),
-			server.Version("1.0"),
-			server.Address(address),
-			server.Context(ctx),
-			server.Codec("application/json", jsoncodec.NewCodec()),
-		)),
-
-		micro.Client(mhttp.NewClient(
-			client.Name("bookserver-micro-client"),
-			client.Context(ctx),
-			client.Codec("application/json", jsoncodec.NewCodec()),
-			client.ContentType("application/json"),
-		)),
-
-		micro.Context(ctx),
+	srv := server.NewServer(
+		server.Name("bookserver-micro"),
+		server.Context(ctx),
 	)
 
-	srv := micro.NewService(options...)
+	hd := srv.NewHandler(handler.NewServerHandler())
 
-	if err := srv.Init(); err != nil {
+	if err := srv.Handle(hd); err != nil {
 		logger.Fatal(ctx, err.Error())
 	}
 
-	eh := handler.NewServerHandler()
+	service := micro.NewService(
+		micro.Server(srv),
+	)
 
-	if err := pb.RegisterBookServerServer(srv.Server(), eh); err != nil {
+	if err := service.Init(); err != nil {
 		logger.Fatal(ctx, err.Error())
 	}
 
 	go func() {
-		if err := srv.Run(); err != nil {
+		if err := service.Run(); err != nil {
 			logger.Fatal(ctx, err.Error())
 		}
 	}()
 
-	for !srv.Ready() {
+	for !service.Ready() {
 		select {
 		case <-ctx.Done():
-			return func() {}, ""
+			return nil
 		case <-time.After(10 * time.Millisecond):
 		}
 	}
@@ -97,7 +67,7 @@ func InitServerWithReady(ctx context.Context, readyCh chan<- struct{}) (func(), 
 		close(readyCh)
 	}
 
-	return func() { srv.Stop() }, srv.Server().Options().Address
+	return service
 }
 
 func InitDirectories() error {

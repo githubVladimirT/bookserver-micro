@@ -61,28 +61,29 @@ type ServerHandler struct {
 	db *sqlx.DB
 }
 
-func InitDB() *sqlx.DB {
-	db, err := sqlx.Open("sqlite3", "db/sqlite3/books.db")
-	if err != nil {
-		panic(err)
-	}
-
-	_, err = db.Exec(create_table)
-	if err != nil {
-		panic(err)
-	}
-
-	println(" --- DB inited successfully")
-
-	return db
-}
-
 func InitLog() logger.Logger {
 	log := slog.NewLogger()
 	if err := log.Init(); err != nil {
 		panic(err)
 	}
 	return log
+}
+
+func InitDB() *sqlx.DB {
+	log := InitLog()
+	db, err := sqlx.Open("sqlite3", "db/sqlite3/books.db")
+	if err != nil {
+		log.Fatal(context.Background(), err.Error())
+	}
+
+	_, err = db.Exec(create_table)
+	if err != nil {
+		log.Fatal(context.Background(), err.Error())
+	}
+
+	log.Info(context.Background(), "database initialized successfully")
+
+	return db
 }
 
 func NewServerHandler() *ServerHandler {
@@ -104,7 +105,7 @@ func (h *ServerHandler) GetAllBooks(ctx context.Context, req *pb.Empty, rsp *pb.
 	rows, err := h.db.Query(get_all_books)
 	if err != nil {
 		log.Error(ctx, err.Error())
-		// httpsrv.SetRspHeader(ctx, http.Header{"Content-Type": []string{"application/json"}})
+		httpsrv.SetRspHeader(ctx, http.Header{"Content-Type": []string{"application/json"}})
 		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
 	}
@@ -112,7 +113,7 @@ func (h *ServerHandler) GetAllBooks(ctx context.Context, req *pb.Empty, rsp *pb.
 	err = scan.Rows(&books, rows)
 	if err != nil {
 		log.Error(ctx, err.Error())
-		// httpsrv.SetRspHeader(ctx, http.Header{"Content-Type": []string{"application/json"}})
+		httpsrv.SetRspHeader(ctx, http.Header{"Content-Type": []string{"application/json"}})
 		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
 	}
@@ -143,13 +144,13 @@ func (h *ServerHandler) GetAllBooksAndSort(ctx context.Context, req *pb.SortType
 
 	if err != nil {
 		log.Error(ctx, err.Error())
-		// httpsrv.SetRspHeader(ctx, http.Header{"Content-Type": []string{"application/json"}})
+		httpsrv.SetRspHeader(ctx, http.Header{"Content-Type": []string{"application/json"}})
 		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
 	}
 
 	if len(books) == 0 {
-		// httpsrv.SetRspHeader(ctx, http.Header{"Content-Type": []string{"application/json"}})
+		httpsrv.SetRspHeader(ctx, http.Header{"Content-Type": []string{"application/json"}})
 		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "No books found"})
 	}
@@ -167,7 +168,7 @@ func (h *ServerHandler) Book(ctx context.Context, req *pb.GetBook, rsp *pb.GetBo
 	rows, err := h.db.Queryx(selectdata, req.BookTitle)
 	if err != nil {
 		log.Error(ctx, err.Error())
-		// httpsrv.SetRspHeader(ctx, http.Header{"Content-Type": []string{"application/json"}})
+		httpsrv.SetRspHeader(ctx, http.Header{"Content-Type": []string{"application/json"}})
 		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
 	}
@@ -177,7 +178,7 @@ func (h *ServerHandler) Book(ctx context.Context, req *pb.GetBook, rsp *pb.GetBo
 		var b pb.GetBookRsp
 		if err := rows.StructScan(&b); err != nil {
 			log.Error(ctx, err.Error())
-			// httpsrv.SetRspHeader(ctx, http.Header{"Content-Type": []string{"application/json"}})
+			httpsrv.SetRspHeader(ctx, http.Header{"Content-Type": []string{"application/json"}})
 			httpsrv.SetRspCode(ctx, http.StatusBadRequest)
 			return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
 		}
@@ -185,7 +186,7 @@ func (h *ServerHandler) Book(ctx context.Context, req *pb.GetBook, rsp *pb.GetBo
 	}
 
 	if len(books) == 0 {
-		// httpsrv.SetRspHeader(ctx, http.Header{"Content-Type": []string{"application/json"}})
+		httpsrv.SetRspHeader(ctx, http.Header{"Content-Type": []string{"application/json"}})
 		httpsrv.SetRspCode(ctx, http.StatusNotFound)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "book not found"})
 	}
