@@ -7,7 +7,6 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/mattn/go-sqlite3 v1.14.22
 	go.unistack.org/micro-client-http/v3 v3.9.15
-	go.unistack.org/micro-codec-jsonpb/v3 v3.10.6
 	go.unistack.org/micro-proto/v3 v3.4.1
 	go.unistack.org/micro-server-http/v3 v3.11.39
 	go.unistack.org/micro/v3 v3.11.51
@@ -29,6 +28,7 @@ require (
 	github.com/golang/protobuf v1.5.4
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/micro/micro/v3 v3.19.0
+	go.unistack.org/micro-codec-json/v3 v3.10.3
 )
 
 require (
@@ -55,6 +55,5 @@ require (
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/stretchr/testify v1.10.0 // indirect
 	go.uber.org/automaxprocs v1.6.0 // indirect
-	go.unistack.org/micro-codec-json/v3 v3.10.3 // indirect
 	golang.org/x/exp v0.0.0-20241210194714-1829a127f884 // indirect
 )

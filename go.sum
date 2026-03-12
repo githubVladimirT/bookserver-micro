@@ -1097,8 +1097,6 @@ go.unistack.org/micro-client-http/v3 v3.9.15 h1:d2t/8P0FrvZwIpdqwHwn9+7rP5zcDa4D
 go.unistack.org/micro-client-http/v3 v3.9.15/go.mod h1:KS6qxpxGDQmcszBaJpidc1KOr528QflEKoGopl0qYJ8=
 go.unistack.org/micro-codec-json/v3 v3.10.3 h1:FwSBfJswov30Dyqxp1XfQW1EG4h77uTEe/VGflg6XlY=
 go.unistack.org/micro-codec-json/v3 v3.10.3/go.mod h1:26OK5MizMNKhspGC6PRVwpDIp5w1GmRb0nE5eRWWDxA=
-go.unistack.org/micro-codec-jsonpb/v3 v3.10.6 h1:9vZGETgEqysuz+ZPyph772uTHaQbRFkAwR/3Zr1+ckk=
-go.unistack.org/micro-codec-jsonpb/v3 v3.10.6/go.mod h1:sUXFkjeDz7FE+Zj2zEbVROMxhxIdQnp0VslUylZSzaY=
 go.unistack.org/micro-proto/v3 v3.4.1 h1:UTjLSRz2YZuaHk9iSlVqqsA50JQNAEK2ZFboGqtEa9Q=
 go.unistack.org/micro-proto/v3 v3.4.1/go.mod h1:okx/cnOhzuCX0ggl/vToatbCupi0O44diiiLLsZ93Zo=
 go.unistack.org/micro-server-http/v3 v3.11.39 h1:8Ny21JwfsfNjAv8LakUArfdMDeczfvkAQ/i+y75Ohj4=
