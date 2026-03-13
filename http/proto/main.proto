@@ -20,7 +20,7 @@ service BookServer {
         };
       };
     };
-    option (micro.api.http) = { get: "/"; body: "*"; };
+    option (micro.api.http) = { get: "/"; };
     option (micro.api.micro_method) = { timeout: "1s"; };
   };
   rpc Push(PostBookReq) returns (StatusUploadedBookRsp) {
@@ -34,7 +34,7 @@ service BookServer {
         };
       };
     };
-    option (micro.api.http) = { post: "/push"; body: "*"; };
+    option (micro.api.http) = { post: "/pushbook"; body: "*"; };
     option (micro.api.micro_method) = { timeout: "1s"; };
   };
   rpc Book(GetBookReq) returns (GetBookRsp) {
@@ -48,7 +48,7 @@ service BookServer {
         };
       };
     };
-    option (micro.api.http) = { get: "/book"; body: "*"; };
+    option (micro.api.http) = { get: "/getbook"; };
     option (micro.api.micro_method) = { timeout: "1s"; };
   };
   rpc GetAllBooks(EmptyReq) returns (GetAllBooksRsp) {
@@ -62,7 +62,7 @@ service BookServer {
         };
       };
     };
-    option (micro.api.http) = { get: "/allbooks"; body: "*"; };
+    option (micro.api.http) = { get: "/getallbooks"; };
     option (micro.api.micro_method) = { timeout: "1s"; };
   };
   rpc GetAllBooksAndSort(SortTypeReq) returns (GetAllBooksAndSortRsp) {
@@ -76,7 +76,7 @@ service BookServer {
         };
       };
     };
-    option (micro.api.http) = { get: "/allbooks"; body: "*"; };
+    option (micro.api.http) = { get: "/getallbookssorted"; };
     option (micro.api.micro_method) = { timeout: "1s"; };
   };
 };

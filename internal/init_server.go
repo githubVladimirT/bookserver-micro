@@ -2,24 +2,26 @@ package internal
 
 import (
 	"context"
-	"time"
+	"fmt"
 
 	"os"
 	"path/filepath"
 	"runtime"
 
 	"github.com/githubVladimirT/bookserver-micro/http/handler"
-	// pb "github.com/githubVladimirT/bookserver-micro/proto"
+	pb "github.com/githubVladimirT/bookserver-micro/http/proto"
+	httpsrv "go.unistack.org/micro-server-http/v3"
 
-	// mhttp "go.unistack.org/micro-client-http/v3"
-	// httpsrv "go.unistack.org/micro-server-http/v3"
-	"go.unistack.org/micro/v4"
-	"go.unistack.org/micro/v4/server"
+	// "go.unistack.org/micro/v3"
+	"go.unistack.org/micro/v3/register"
+	"go.unistack.org/micro/v3/server"
 
-	micro_logger "go.unistack.org/micro/v4/logger/slog"
+	jsoncodec "go.unistack.org/micro-codec-json/v3"
+
+	micro_logger "go.unistack.org/micro/v3/logger/slog"
 )
 
-func InitServerWithReady(ctx context.Context, readyCh chan<- struct{}) micro.Service {
+func InitServerWithReady(ctx context.Context, reg register.Register) *httpsrv.Server {
 	logger := micro_logger.NewLogger()
 	if err := logger.Init(); err != nil {
 		panic(err)
@@ -30,44 +32,36 @@ func InitServerWithReady(ctx context.Context, readyCh chan<- struct{}) micro.Ser
 		logger.Fatal(ctx, err.Error())
 	}
 
-	srv := server.NewServer(
+	srv := httpsrv.NewServer(
+		server.Address("127.0.0.1:0"),
 		server.Name("bookserver-micro"),
+		server.Register(reg),
 		server.Context(ctx),
+		server.Codec("application/json", jsoncodec.NewCodec()),
 	)
 
-	hd := srv.NewHandler(handler.NewServerHandler())
-
-	if err := srv.Handle(hd); err != nil {
+	if err := pb.RegisterBookServerServer(srv, handler.NewServerHandler()); err != nil {
 		logger.Fatal(ctx, err.Error())
 	}
 
-	service := micro.NewService(
-		micro.Server(srv),
-	)
-
-	if err := service.Init(); err != nil {
+	if err := srv.Start(); err != nil {
 		logger.Fatal(ctx, err.Error())
 	}
 
-	go func() {
-		if err := service.Run(); err != nil {
-			logger.Fatal(ctx, err.Error())
-		}
-	}()
-
-	for !service.Ready() {
-		select {
-		case <-ctx.Done():
-			return nil
-		case <-time.After(10 * time.Millisecond):
-		}
+	svc, err := reg.LookupService(ctx, "bookserver-micro")
+	if err != nil {
+		logger.Fatal(ctx, err.Error())
 	}
 
-	if readyCh != nil {
-		close(readyCh)
+	if len(svc) != 1 {
+		logger.Fatal(ctx, fmt.Errorf("Expected 1 service got %d: %+v", len(svc), svc).Error())
 	}
 
-	return service
+	if len(svc[0].Nodes) != 1 {
+		logger.Fatal(ctx, fmt.Errorf("Expected 1 node got %d: %+v", len(svc[0].Nodes), svc[0].Nodes).Error())
+	}
+
+	return srv
 }
 
 func InitDirectories() error {

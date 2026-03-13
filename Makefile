@@ -16,7 +16,7 @@ init:
 	mkdir -p db/sqlite3/ books/ bin/
 
 gen:
-	./gen.sh
+	cd ./http/ && go generate
 
 build: init gen
 	$(GO_BUILD) -o bin/$(NAME)
