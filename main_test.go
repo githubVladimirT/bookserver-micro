@@ -28,14 +28,15 @@ var (
 func TestHome(t *testing.T) {
 	reg := mregister.NewRegister()
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	t.Cleanup(cancel)
 
 	srv := internal.InitServerWithReady(ctx, reg)
-	defer srv.Stop()
+	t.Cleanup(func() { srv.Stop() })
 
 	c := mhttp.NewClient(
 		client.Codec("application/json", jsoncodec.NewCodec()),
 		client.ContentType("application/json"),
+		client.Codec("text/plain", jsoncodec.NewCodec()),
 	)
 
 	if c == nil {
@@ -70,14 +71,17 @@ func TestHome(t *testing.T) {
 func TestPush(t *testing.T) {
 	reg := mregister.NewRegister()
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	t.Cleanup(cancel)
+	// defer cancel()
 
 	srv := internal.InitServerWithReady(ctx, reg)
-	defer srv.Stop()
+	t.Cleanup(func() { srv.Stop() })
+	// defer srv.Stop()
 
 	c := mhttp.NewClient(
 		client.Codec("application/json", jsoncodec.NewCodec()),
 		client.ContentType("application/json"),
+		client.Codec("text/plain", jsoncodec.NewCodec()),
 	)
 	if c == nil {
 		t.Fatal("mhttp.NewClient returned nil")
@@ -118,7 +122,7 @@ func TestPush(t *testing.T) {
 		req := c.NewRequest(
 			"bookserver-micro",
 			"/pushbook",
-			book,
+			&book,
 		)
 		rsp := new(pb.StatusUploadedBookRsp)
 
@@ -128,6 +132,7 @@ func TestPush(t *testing.T) {
 			rsp,
 			client.WithAddress(srv.Options().Address),
 			mhttp.Method("POST"),
+			mhttp.Body("*"),
 		)
 
 		if err != nil {
@@ -143,27 +148,58 @@ func TestPush(t *testing.T) {
 func TestBook(t *testing.T) {
 	reg := mregister.NewRegister()
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	t.Cleanup(cancel)
 
 	srv := internal.InitServerWithReady(ctx, reg)
-	defer srv.Stop()
+	t.Cleanup(func() { srv.Stop() })
 
 	c := mhttp.NewClient(
 		client.Codec("application/json", jsoncodec.NewCodec()),
 		client.ContentType("application/json"),
+		client.Codec("text/plain", jsoncodec.NewCodec()),
 	)
 	if c == nil {
 		t.Fatal("mhttp.NewClient returned nil")
 	}
 
+	book_bytes, err := os.ReadFile(TestBookPath)
+	if err != nil {
+		t.Fatalf("failed to read test book: %v", err)
+	}
+
+	pushReq := c.NewRequest(
+		"bookserver-micro",
+		"/pushbook",
+		&pb.PostBookReq{
+			BookTitle: "TestBook",
+			Author:    "TestAuthor",
+			Genre:     "TestGenre",
+			Year:      "2023",
+			BookBytes: book_bytes,
+		},
+	)
+	pushRsp := new(pb.StatusUploadedBookRsp)
+
+	err = c.Call(
+		ctx,
+		pushReq,
+		pushRsp,
+		client.WithAddress(srv.Options().Address),
+		mhttp.Method("POST"),
+		mhttp.Body("*"),
+	)
+	if err != nil {
+		t.Fatalf("Push call failed: %v", err)
+	}
+
 	req := c.NewRequest(
 		"bookserver-micro",
-		"/getbook",
-		&pb.GetBookReq{BookTitle: "TestBook"},
+		"/getbook/TestBook",
+		&pb.GetBookReq{},
 	)
 	rsp := new(pb.GetBookRsp)
 
-	err := c.Call(
+	err = c.Call(
 		ctx,
 		req,
 		rsp,
@@ -190,14 +226,15 @@ func TestBook(t *testing.T) {
 func TestGetAllBooks(t *testing.T) {
 	reg := mregister.NewRegister()
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	t.Cleanup(cancel)
 
 	srv := internal.InitServerWithReady(ctx, reg)
-	defer srv.Stop()
+	t.Cleanup(func() { srv.Stop() })
 
 	c := mhttp.NewClient(
 		client.Codec("application/json", jsoncodec.NewCodec()),
 		client.ContentType("application/json"),
+		client.Codec("text/plain", jsoncodec.NewCodec()),
 	)
 	if c == nil {
 		t.Fatal("mhttp.NewClient returned nil")
@@ -235,14 +272,15 @@ func TestGetAllBooks(t *testing.T) {
 func TestGetAllBooksAndSort(t *testing.T) {
 	reg := mregister.NewRegister()
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	t.Cleanup(cancel)
 
 	srv := internal.InitServerWithReady(ctx, reg)
-	defer srv.Stop()
+	t.Cleanup(func() { srv.Stop() })
 
 	c := mhttp.NewClient(
 		client.Codec("application/json", jsoncodec.NewCodec()),
 		client.ContentType("application/json"),
+		client.Codec("text/plain", jsoncodec.NewCodec()),
 	)
 	if c == nil {
 		t.Fatal("mhttp.NewClient returned nil")
@@ -250,8 +288,8 @@ func TestGetAllBooksAndSort(t *testing.T) {
 
 	reqb := c.NewRequest(
 		"bookserver-micro",
-		"/getbook",
-		&pb.GetBookReq{BookTitle: "TestBook"},
+		"/getbook/TestBook",
+		&pb.GetBookReq{},
 	)
 	book := new(pb.GetBookRsp)
 

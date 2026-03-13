@@ -12,7 +12,6 @@ import (
 	pb "github.com/githubVladimirT/bookserver-micro/http/proto"
 	httpsrv "go.unistack.org/micro-server-http/v3"
 
-	// "go.unistack.org/micro/v3"
 	"go.unistack.org/micro/v3/register"
 	"go.unistack.org/micro/v3/server"
 

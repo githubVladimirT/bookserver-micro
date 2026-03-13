@@ -3,6 +3,7 @@ package handler
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"io"
 	"net/http"
 	"os"
@@ -12,7 +13,6 @@ import (
 
 	pb "github.com/githubVladimirT/bookserver-micro/http/proto"
 
-	// "github.com/blockloop/scan/v2"
 	"github.com/google/uuid"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -193,10 +193,15 @@ func (h *ServerHandler) Book(ctx context.Context, req *pb.GetBookReq, rsp *pb.Ge
 	var title, author, genre, year string
 
 	err := h.db.QueryRow(selectdata, req.BookTitle).Scan(&title, &author, &genre, &year)
-	if err != nil {
-		log.Error(ctx, err.Error())
+	if err == sql.ErrNoRows {
+		log.Error(ctx, "book not found: "+req.BookTitle)
 		httpsrv.SetRspCode(ctx, http.StatusNotFound)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "book not found"})
+	}
+	if err != nil {
+		log.Error(ctx, err.Error())
+		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
+		return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
 	}
 
 	rsp.Title = title
@@ -261,19 +266,15 @@ func (h *ServerHandler) Push(ctx context.Context, req *pb.PostBookReq, rsp *pb.S
 }
 
 func (h *ServerHandler) insertNewBook(book Book) (int, error) {
-	var id int
-
-	_, err := h.db.Exec(insert_book, book.Filepath, book.Title, book.Author, book.Genre, book.Year)
+	result, err := h.db.Exec(insert_book, book.Filepath, book.Title, book.Author, book.Genre, book.Year)
 	if err != nil {
 		return -1, err
 	}
 
-	err = h.db.QueryRow(selectid_insertNewBook, book.Filepath).Scan(&id)
+	id, err := result.LastInsertId()
 	if err != nil {
 		return -1, err
 	}
 
-	println(id)
-
-	return id, nil
+	return int(id), nil
 }
