@@ -39,23 +39,20 @@ func TestHome(t *testing.T) {
 		client.Codec("text/plain", jsoncodec.NewCodec()),
 	)
 
-	if c == nil {
-		t.Fatal("mhttp.NewClient returned nil")
+	if err := c.Init(); err != nil {
+		t.Fatalf("Client init failed: %v", err)
 	}
 
-	req := c.NewRequest(
-		"bookserver-micro",
-		"/",
-		&pb.EmptyReq{},
+	cli := pb.NewBookServerClient(
+		"bookclient-micro",
+		c,
 	)
-	rsp := new(pb.StatusRsp)
 
-	err := c.Call(
+	req := &pb.EmptyReq{}
+	rsp, err := cli.Home(
 		ctx,
 		req,
-		rsp,
 		client.WithAddress(srv.Options().Address),
-		mhttp.Method("GET"),
 	)
 
 	if err != nil {
@@ -72,27 +69,31 @@ func TestPush(t *testing.T) {
 	reg := mregister.NewRegister()
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
-	// defer cancel()
 
 	srv := internal.InitServerWithReady(ctx, reg)
 	t.Cleanup(func() { srv.Stop() })
-	// defer srv.Stop()
 
 	c := mhttp.NewClient(
 		client.Codec("application/json", jsoncodec.NewCodec()),
 		client.ContentType("application/json"),
 		client.Codec("text/plain", jsoncodec.NewCodec()),
 	)
-	if c == nil {
-		t.Fatal("mhttp.NewClient returned nil")
+
+	if err := c.Init(); err != nil {
+		t.Fatalf("Client init failed: %v", err)
 	}
+
+	cli := pb.NewBookServerClient(
+		"bookclient-micro",
+		c,
+	)
 
 	book_bytes, err := os.ReadFile(TestBookPath)
 	if err != nil {
 		t.Fatalf("failed to read test book: %v", err)
 	}
 
-	books := []*pb.PostBookReq{
+	books_req := []*pb.PostBookReq{
 		{
 			BookTitle: "TestBook",
 			Author:    "TestAuthor",
@@ -116,23 +117,13 @@ func TestPush(t *testing.T) {
 		},
 	}
 
-	for i := range books {
-		book := books[i]
-
-		req := c.NewRequest(
-			"bookserver-micro",
-			"/pushbook",
-			&book,
-		)
-		rsp := new(pb.StatusUploadedBookRsp)
-
-		err := c.Call(
+	for i := range books_req {
+		req := books_req[i]
+		rsp, err := cli.Push(
 			ctx,
 			req,
-			rsp,
 			client.WithAddress(srv.Options().Address),
 			mhttp.Method("POST"),
-			mhttp.Body("*"),
 		)
 
 		if err != nil {
@@ -158,65 +149,28 @@ func TestBook(t *testing.T) {
 		client.ContentType("application/json"),
 		client.Codec("text/plain", jsoncodec.NewCodec()),
 	)
-	if c == nil {
-		t.Fatal("mhttp.NewClient returned nil")
+
+	if err := c.Init(); err != nil {
+		t.Fatalf("Client init failed: %v", err)
 	}
 
-	book_bytes, err := os.ReadFile(TestBookPath)
-	if err != nil {
-		t.Fatalf("failed to read test book: %v", err)
-	}
-
-	pushReq := c.NewRequest(
-		"bookserver-micro",
-		"/pushbook",
-		&pb.PostBookReq{
-			BookTitle: "TestBook",
-			Author:    "TestAuthor",
-			Genre:     "TestGenre",
-			Year:      "2023",
-			BookBytes: book_bytes,
-		},
+	cli := pb.NewBookServerClient(
+		"bookclient-micro",
+		c,
 	)
-	pushRsp := new(pb.StatusUploadedBookRsp)
 
-	err = c.Call(
-		ctx,
-		pushReq,
-		pushRsp,
-		client.WithAddress(srv.Options().Address),
-		mhttp.Method("POST"),
-		mhttp.Body("*"),
-	)
-	if err != nil {
-		t.Fatalf("Push call failed: %v", err)
-	}
-
-	req := c.NewRequest(
-		"bookserver-micro",
-		"/getbook/TestBook",
-		&pb.GetBookReq{},
-	)
-	rsp := new(pb.GetBookRsp)
-
-	err = c.Call(
+	req := &pb.GetBookReq{BookTitle: "TestBook"}
+	rsp, err := cli.Book(
 		ctx,
 		req,
-		rsp,
 		client.WithAddress(srv.Options().Address),
-		mhttp.Method("GET"),
 	)
 
 	if err != nil {
 		t.Fatalf("Book call failed: %v", err)
 	}
 
-	title := rsp.GetTitle()
-	author := rsp.GetAuthor()
-	genre := rsp.GetGenre()
-	year := rsp.GetYear()
-
-	if title != "TestBook" || author != "TestAuthor" || genre != "TestGenre" || year != "2023" {
+	if rsp.Title != "TestBook" || rsp.Author != "TestAuthor" || rsp.Genre != "TestGenre" || rsp.Year != "2023" {
 		t.Fatalf("invalid rsp received: %#+v", rsp)
 	}
 
@@ -236,23 +190,21 @@ func TestGetAllBooks(t *testing.T) {
 		client.ContentType("application/json"),
 		client.Codec("text/plain", jsoncodec.NewCodec()),
 	)
-	if c == nil {
-		t.Fatal("mhttp.NewClient returned nil")
+
+	if err := c.Init(); err != nil {
+		t.Fatalf("Client init failed: %v", err)
 	}
 
-	req := c.NewRequest(
-		"bookserver-micro",
-		"/getallbooks",
-		&pb.EmptyReq{},
+	cli := pb.NewBookServerClient(
+		"bookclient-micro",
+		c,
 	)
-	rsp := new(pb.GetAllBooksRsp)
 
-	err := c.Call(
+	req := &pb.EmptyReq{}
+	rsp, err := cli.GetAllBooks(
 		ctx,
 		req,
-		rsp,
 		client.WithAddress(srv.Options().Address),
-		mhttp.Method("GET"),
 	)
 
 	if err != nil {
@@ -282,23 +234,21 @@ func TestGetAllBooksAndSort(t *testing.T) {
 		client.ContentType("application/json"),
 		client.Codec("text/plain", jsoncodec.NewCodec()),
 	)
-	if c == nil {
-		t.Fatal("mhttp.NewClient returned nil")
+
+	if err := c.Init(); err != nil {
+		t.Fatalf("Client init failed: %v", err)
 	}
 
-	reqb := c.NewRequest(
-		"bookserver-micro",
-		"/getbook/TestBook",
-		&pb.GetBookReq{},
+	cli := pb.NewBookServerClient(
+		"bookclient-micro",
+		c,
 	)
-	book := new(pb.GetBookRsp)
 
-	err := c.Call(
+	reqb := &pb.GetBookReq{BookTitle: "TestBook"}
+	book, err := cli.Book(
 		ctx,
 		reqb,
-		book,
 		client.WithAddress(srv.Options().Address),
-		mhttp.Method("GET"),
 	)
 
 	if err != nil {
@@ -307,19 +257,11 @@ func TestGetAllBooksAndSort(t *testing.T) {
 
 	sortTypes := []string{"title", "author", "genre", "year"}
 	for _, sortType := range sortTypes {
-		req := c.NewRequest(
-			"bookserver-micro",
-			"/getallbookssorted",
-			&pb.SortTypeReq{SortType: sortType},
-		)
-		rsp := new(pb.GetAllBooksAndSortRsp)
-
-		err := c.Call(
+		req := &pb.SortTypeReq{SortType: sortType}
+		rsp, err := cli.GetAllBooksAndSort(
 			ctx,
 			req,
-			rsp,
 			client.WithAddress(srv.Options().Address),
-			mhttp.Method("GET"),
 		)
 
 		if err != nil {

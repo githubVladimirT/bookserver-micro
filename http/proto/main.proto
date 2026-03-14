@@ -48,7 +48,7 @@ service BookServer {
         };
       };
     };
-    option (micro.api.http) = { get: "/getbook/{book_title}"; };
+    option (micro.api.http) = { get: "/getbook"; };
     option (micro.api.micro_method) = { timeout: "1s"; };
   };
   rpc GetAllBooks(EmptyReq) returns (GetAllBooksRsp) {

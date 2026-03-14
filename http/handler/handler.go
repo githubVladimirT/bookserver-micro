@@ -55,7 +55,7 @@ const (
 	`
 
 	insert_book            = `INSERT INTO books VALUES(NULL, ?, ?, ?, ?, ?);`
-	selectid_insertNewBook = `SELECT id FROM books WHERE filepath=?;`
+	// selectid_insertNewBook = `SELECT id FROM books WHERE filepath=?;`
 	selectdata             = `SELECT title, author, genre, year FROM books WHERE title=?;`
 	sort_query             = `SELECT title, author, genre, year FROM books ORDER BY ?;`
 	get_all_books          = `SELECT title FROM books;`

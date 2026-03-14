@@ -32,7 +32,7 @@ var (
 		},
 		{
 			Name:   "BookServer.Book",
-			Path:   "/getbook/{book_title}",
+			Path:   "/getbook",
 			Method: "GET",
 			Body:   "",
 			Stream: false,
@@ -112,7 +112,7 @@ func (c *bookServerClient) Book(ctx context.Context, req *GetBookReq, opts ...cl
 	)
 	opts = append(opts,
 		v31.Method(http.MethodGet),
-		v31.Path("/getbook/{book_title}"),
+		v31.Path("/getbook"),
 	)
 	td := time.Duration(1000000000)
 	opts = append(opts, client.WithRequestTimeout(td))
