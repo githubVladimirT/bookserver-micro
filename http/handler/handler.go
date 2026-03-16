@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -54,11 +55,11 @@ const (
 	);
 	`
 
-	insert_book            = `INSERT INTO books VALUES(NULL, ?, ?, ?, ?, ?);`
+	insert_book = `INSERT INTO books VALUES(NULL, ?, ?, ?, ?, ?);`
 	// selectid_insertNewBook = `SELECT id FROM books WHERE filepath=?;`
-	selectdata             = `SELECT title, author, genre, year FROM books WHERE title=?;`
-	sort_query             = `SELECT title, author, genre, year FROM books ORDER BY ?;`
-	get_all_books          = `SELECT title FROM books;`
+	selectdata    = `SELECT title, author, genre, year FROM books WHERE title=?;`
+	sort_query    = `SELECT title, author, genre, year FROM books ORDER BY ?;`
+	get_all_books = `SELECT title FROM books;`
 )
 
 type ReturnBook struct {
@@ -156,6 +157,8 @@ func (h *ServerHandler) GetAllBooks(ctx context.Context, req *pb.EmptyReq, rsp *
 func (h *ServerHandler) GetAllBooksAndSort(ctx context.Context, req *pb.SortTypeReq, rsp *pb.GetAllBooksAndSortRsp) error {
 	log := InitLog()
 
+	log.Info(ctx, fmt.Sprintf("DEBUG: received request: %+v", req))
+
 	allowedSortFields := map[string]bool{
 		"title":  true,
 		"author": true,
@@ -189,6 +192,8 @@ func (h *ServerHandler) GetAllBooksAndSort(ctx context.Context, req *pb.SortType
 }
 func (h *ServerHandler) Book(ctx context.Context, req *pb.GetBookReq, rsp *pb.GetBookRsp) error {
 	log := InitLog()
+
+	log.Info(ctx, fmt.Sprintf("DEBUG: received request: %+v", req))
 
 	var title, author, genre, year string
 

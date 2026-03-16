@@ -48,10 +48,9 @@ func TestHome(t *testing.T) {
 		c,
 	)
 
-	req := &pb.EmptyReq{}
 	rsp, err := cli.Home(
 		ctx,
-		req,
+		&pb.EmptyReq{},
 		client.WithAddress(srv.Options().Address),
 	)
 
@@ -118,10 +117,9 @@ func TestPush(t *testing.T) {
 	}
 
 	for i := range books_req {
-		req := books_req[i]
 		rsp, err := cli.Push(
 			ctx,
-			req,
+			books_req[i],
 			client.WithAddress(srv.Options().Address),
 			mhttp.Method("POST"),
 		)
@@ -159,10 +157,9 @@ func TestBook(t *testing.T) {
 		c,
 	)
 
-	req := &pb.GetBookReq{BookTitle: "TestBook"}
 	rsp, err := cli.Book(
 		ctx,
-		req,
+		&pb.GetBookReq{BookTitle: "TestBook"},
 		client.WithAddress(srv.Options().Address),
 	)
 
@@ -200,10 +197,9 @@ func TestGetAllBooks(t *testing.T) {
 		c,
 	)
 
-	req := &pb.EmptyReq{}
 	rsp, err := cli.GetAllBooks(
 		ctx,
-		req,
+		&pb.EmptyReq{},
 		client.WithAddress(srv.Options().Address),
 	)
 
@@ -244,10 +240,9 @@ func TestGetAllBooksAndSort(t *testing.T) {
 		c,
 	)
 
-	reqb := &pb.GetBookReq{BookTitle: "TestBook"}
 	book, err := cli.Book(
 		ctx,
-		reqb,
+		&pb.GetBookReq{BookTitle: "TestBook"},
 		client.WithAddress(srv.Options().Address),
 	)
 
@@ -257,10 +252,9 @@ func TestGetAllBooksAndSort(t *testing.T) {
 
 	sortTypes := []string{"title", "author", "genre", "year"}
 	for _, sortType := range sortTypes {
-		req := &pb.SortTypeReq{SortType: sortType}
 		rsp, err := cli.GetAllBooksAndSort(
 			ctx,
-			req,
+			&pb.SortTypeReq{SortType: sortType},
 			client.WithAddress(srv.Options().Address),
 		)
 
