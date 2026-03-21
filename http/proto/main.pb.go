@@ -24,6 +24,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// EmptyReq is an empty request message.
 type EmptyReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -60,6 +61,7 @@ func (*EmptyReq) Descriptor() ([]byte, []int) {
 	return file_main_proto_rawDescGZIP(), []int{0}
 }
 
+// GetBookReq is a request to get a book by title.
 type GetBookReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	BookTitle     string                 `protobuf:"bytes,1,opt,name=book_title,json=bookTitle,proto3" json:"book_title,omitempty"`
@@ -104,6 +106,7 @@ func (x *GetBookReq) GetBookTitle() string {
 	return ""
 }
 
+// SortTypeReq is a request to specify a sort type.
 type SortTypeReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	SortType      string                 `protobuf:"bytes,1,opt,name=sort_type,json=sortType,proto3" json:"sort_type,omitempty"`
@@ -148,6 +151,7 @@ func (x *SortTypeReq) GetSortType() string {
 	return ""
 }
 
+// GetAllBooksRsp is the response containing a list of book titles.
 type GetAllBooksRsp struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Books         []string               `protobuf:"bytes,1,rep,name=books,proto3" json:"books,omitempty"`
@@ -192,6 +196,7 @@ func (x *GetAllBooksRsp) GetBooks() []string {
 	return nil
 }
 
+// GetAllBooksAndSortRsp is the response containing sorted books.
 type GetAllBooksAndSortRsp struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Books         []*GetBookRsp          `protobuf:"bytes,1,rep,name=books,proto3" json:"books,omitempty"`
@@ -236,6 +241,7 @@ func (x *GetAllBooksAndSortRsp) GetBooks() []*GetBookRsp {
 	return nil
 }
 
+// PostBookReq is a request to upload a new book.
 type PostBookReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	BookTitle     string                 `protobuf:"bytes,1,opt,name=book_title,json=bookTitle,proto3" json:"book_title,omitempty"`
@@ -312,6 +318,7 @@ func (x *PostBookReq) GetBookBytes() []byte {
 	return nil
 }
 
+// GetBookRsp is the response containing book details.
 type GetBookRsp struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Title         string                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
@@ -380,6 +387,7 @@ func (x *GetBookRsp) GetYear() string {
 	return ""
 }
 
+// StatusRsp is a response with a status description.
 type StatusRsp struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Description   string                 `protobuf:"bytes,1,opt,name=description,proto3" json:"description,omitempty"`
@@ -424,6 +432,7 @@ func (x *StatusRsp) GetDescription() string {
 	return ""
 }
 
+// StatusUploadedBookRsp is the response after uploading a book.
 type StatusUploadedBookRsp struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	BookId        string                 `protobuf:"bytes,1,opt,name=book_id,json=bookId,proto3" json:"book_id,omitempty"`
@@ -468,6 +477,7 @@ func (x *StatusUploadedBookRsp) GetBookId() string {
 	return ""
 }
 
+// ErrorRsp is an error response message.
 type ErrorRsp struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Msg           string                 `protobuf:"bytes,1,opt,name=msg,proto3" json:"msg,omitempty"`
@@ -609,10 +619,9 @@ var file_main_proto_rawDesc = []byte{
 	0x72, 0x6f, 0x2e, 0x45, 0x72, 0x72, 0x6f, 0x72, 0x52, 0x73, 0x70, 0xb2, 0xea, 0xff, 0xf9, 0x01,
 	0x14, 0x12, 0x12, 0x2f, 0x67, 0x65, 0x74, 0x61, 0x6c, 0x6c, 0x62, 0x6f, 0x6f, 0x6b, 0x73, 0x73,
 	0x6f, 0x72, 0x74, 0x65, 0x64, 0xba, 0xea, 0xff, 0xf9, 0x01, 0x04, 0x0a, 0x02, 0x31, 0x73, 0x42,
-	0x30, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x67, 0x69,
-	0x74, 0x68, 0x75, 0x62, 0x56, 0x6c, 0x61, 0x64, 0x69, 0x6d, 0x69, 0x72, 0x54, 0x2f, 0x62, 0x6f,
-	0x6f, 0x6b, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x2d, 0x6d, 0x69, 0x63, 0x72, 0x6f, 0x3b, 0x70,
-	0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x27, 0x5a, 0x25, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x56, 0x54,
+	0x30, 0x78, 0x30, 0x30, 0x2f, 0x62, 0x6f, 0x6f, 0x6b, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x2d,
+	0x6d, 0x69, 0x63, 0x72, 0x6f, 0x3b, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (

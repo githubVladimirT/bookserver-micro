@@ -12,7 +12,7 @@ import (
 	"runtime"
 	"strconv"
 
-	pb "github.com/githubVladimirT/bookserver-micro/http/proto"
+	pb "github.com/VT0x00/bookserver-micro/http/proto"
 
 	"github.com/google/uuid"
 

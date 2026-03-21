@@ -1,4 +1,4 @@
-module github.com/githubVladimirT/bookserver-micro
+module github.com/VT0x00/bookserver-micro
 
 go 1.25.0
 

@@ -9,13 +9,13 @@ import (
 	"path/filepath"
 	"testing"
 
-	pb "github.com/githubVladimirT/bookserver-micro/http/proto"
+	pb "github.com/VT0x00/bookserver-micro/http/proto"
 
 	mhttp "go.unistack.org/micro-client-http/v3"
 	jsoncodec "go.unistack.org/micro-codec-json/v3"
 	"go.unistack.org/micro/v3/client"
 
-	"github.com/githubVladimirT/bookserver-micro/internal"
+	"github.com/VT0x00/bookserver-micro/internal"
 
 	mregister "go.unistack.org/micro/v3/register/memory"
 )

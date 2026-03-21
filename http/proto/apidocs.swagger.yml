@@ -1,0 +1,184 @@
+# Generated with protoc-gen-go-micro
+
+openapi: 3.0.3
+info:
+    title: BookServer API
+    description: BookServer service provides book management endpoints.
+    version: 0.0.1
+paths:
+    /:
+        get:
+            tags:
+                - BookServer
+            description: Home returns the home page.
+            operationId: Home
+            responses:
+                default:
+                    description: Default
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorRsp'
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/StatusRsp'
+    /getallbooks:
+        get:
+            tags:
+                - BookServer
+            description: GetAllBooks retrieves all book titles.
+            operationId: GetAllBooks
+            responses:
+                default:
+                    description: Default
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorRsp'
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetAllBooksRsp'
+    /getallbookssorted:
+        get:
+            tags:
+                - BookServer
+            description: GetAllBooksAndSort retrieves all books sorted by the specified type.
+            operationId: GetAllBooksAndSort
+            parameters:
+                - name: sort_type
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                default:
+                    description: Default
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorRsp'
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetAllBooksAndSortRsp'
+    /getbook:
+        get:
+            tags:
+                - BookServer
+            description: Book retrieves a book by its title.
+            operationId: Book
+            parameters:
+                - name: book_title
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                default:
+                    description: Default
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorRsp'
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetBookRsp'
+    /pushbook:
+        post:
+            tags:
+                - BookServer
+            description: Push uploads a new book to the server.
+            operationId: Push
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/PostBookReq'
+                required: true
+            responses:
+                default:
+                    description: Default
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorRsp'
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/StatusUploadedBookRsp'
+components:
+    schemas:
+        ErrorRsp:
+            type: object
+            properties:
+                msg:
+                    type: string
+            description: ErrorRsp is an error response message.
+        GetAllBooksAndSortRsp:
+            type: object
+            properties:
+                books:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/GetBookRsp'
+            description: GetAllBooksAndSortRsp is the response containing sorted books.
+        GetAllBooksRsp:
+            type: object
+            properties:
+                books:
+                    type: array
+                    items:
+                        type: string
+            description: GetAllBooksRsp is the response containing a list of book titles.
+        GetBookRsp:
+            type: object
+            properties:
+                title:
+                    type: string
+                author:
+                    type: string
+                genre:
+                    type: string
+                year:
+                    type: string
+            description: GetBookRsp is the response containing book details.
+        PostBookReq:
+            type: object
+            properties:
+                book_title:
+                    type: string
+                author:
+                    type: string
+                genre:
+                    type: string
+                year:
+                    type: string
+                book_bytes:
+                    type: string
+                    format: bytes
+            description: PostBookReq is a request to upload a new book.
+        StatusRsp:
+            type: object
+            properties:
+                description:
+                    type: string
+            description: StatusRsp is a response with a status description.
+        StatusUploadedBookRsp:
+            type: object
+            properties:
+                book_id:
+                    type: string
+            description: StatusUploadedBookRsp is the response after uploading a book.
+tags:
+    - name: BookServer

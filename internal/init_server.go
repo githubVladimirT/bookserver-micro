@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/githubVladimirT/bookserver-micro/http/handler"
-	pb "github.com/githubVladimirT/bookserver-micro/http/proto"
+	"github.com/VT0x00/bookserver-micro/http/handler"
+	pb "github.com/VT0x00/bookserver-micro/http/proto"
 	httpsrv "go.unistack.org/micro-server-http/v3"
 
 	"go.unistack.org/micro/v3/register"
