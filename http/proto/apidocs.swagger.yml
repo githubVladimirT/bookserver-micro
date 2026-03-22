@@ -52,7 +52,7 @@ paths:
             operationId: GetAllBooksAndSort
             parameters:
                 - name: SortType
-                  in: header
+                  in: query
                   required: true
                   schema:
                     type: string
@@ -81,7 +81,7 @@ paths:
             operationId: Book
             parameters:
                 - name: BookTitle
-                  in: header
+                  in: query
                   required: true
                   schema:
                     type: string

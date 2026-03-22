@@ -114,9 +114,6 @@ func (c *bookServerClient) Book(ctx context.Context, req *GetBookReq, opts ...cl
 		v31.Method(http.MethodGet),
 		v31.Path("/getbook"),
 	)
-	opts = append(opts,
-		v31.Header("BookTitle", "true"),
-	)
 	td := time.Duration(1000000000)
 	opts = append(opts, client.WithRequestTimeout(td))
 	rsp := &GetBookRsp{}
@@ -157,9 +154,6 @@ func (c *bookServerClient) GetAllBooksAndSort(ctx context.Context, req *SortType
 		v31.Method(http.MethodGet),
 		v31.Path("/getallbookssorted"),
 	)
-	opts = append(opts,
-		v31.Header("SortType", "true"),
-	)
 	td := time.Duration(1000000000)
 	opts = append(opts, client.WithRequestTimeout(td))
 	rsp := &GetAllBooksAndSortRsp{}
@@ -195,9 +189,6 @@ func (h *bookServerServer) Book(ctx context.Context, req *GetBookReq, rsp *GetBo
 	td := time.Duration(1000000000)
 	ctx, cancel = context.WithTimeout(ctx, td)
 	defer cancel()
-	v3.FillRequest(ctx, req,
-		v3.Header("BookTitle", "true"),
-	)
 	return h.BookServerServer.Book(ctx, req, rsp)
 }
 
@@ -214,9 +205,6 @@ func (h *bookServerServer) GetAllBooksAndSort(ctx context.Context, req *SortType
 	td := time.Duration(1000000000)
 	ctx, cancel = context.WithTimeout(ctx, td)
 	defer cancel()
-	v3.FillRequest(ctx, req,
-		v3.Header("SortType", "true"),
-	)
 	return h.BookServerServer.GetAllBooksAndSort(ctx, req, rsp)
 }
 

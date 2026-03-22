@@ -54,7 +54,7 @@ service BookServer {
       parameters: {
         parameter: {
           name  : "BookTitle";
-          in    : "header";
+          in    : "query";
           schema: {
             schema: {
               type: "string";
@@ -96,7 +96,7 @@ service BookServer {
       parameters: {
         parameter: {
           name  : "SortType";
-          in    : "header";
+          in    : "query";
           schema: {
             schema: {
               type: "string";

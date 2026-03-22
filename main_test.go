@@ -56,7 +56,6 @@ func TestHome(t *testing.T) {
 	rsp, err := svc.Home(
 		ctx,
 		&pb.EmptyReq{},
-		client.WithAddress(srv.Options().Address),
 	)
 
 	if err != nil {
@@ -130,7 +129,6 @@ func TestPush(t *testing.T) {
 		rsp, err := svc.Push(
 			ctx,
 			books_req[i],
-			client.WithAddress(srv.Options().Address),
 			mhttp.Method("POST"),
 		)
 
@@ -177,7 +175,6 @@ func TestBook(t *testing.T) {
 		&pb.GetBookReq{
 			BookTitle: "TestBook",
 		},
-		mhttp.Header("BookTitle", "TestBook"),
 	)
 
 	if err != nil {
@@ -222,7 +219,6 @@ func TestGetAllBooks(t *testing.T) {
 	rsp, err := svc.GetAllBooks(
 		ctx,
 		&pb.EmptyReq{},
-		client.WithAddress(srv.Options().Address),
 	)
 
 	if err != nil {
@@ -272,7 +268,6 @@ func TestGetAllBooksAndSort(t *testing.T) {
 		&pb.GetBookReq{
 			BookTitle: "TestBook",
 		},
-		client.WithAddress(srv.Options().Address),
 	)
 
 	if err != nil {
@@ -286,7 +281,6 @@ func TestGetAllBooksAndSort(t *testing.T) {
 			&pb.SortTypeReq{
 				SortType: sortType,
 			},
-			client.WithAddress(srv.Options().Address),
 		)
 
 		if err != nil {
