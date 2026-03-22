@@ -51,7 +51,12 @@ paths:
             description: GetAllBooksAndSort retrieves all books sorted by the specified type.
             operationId: GetAllBooksAndSort
             parameters:
-                - name: sort_type
+                - name: SortType
+                  in: header
+                  required: true
+                  schema:
+                    type: string
+                - name: SortType
                   in: query
                   schema:
                     type: string
@@ -75,7 +80,12 @@ paths:
             description: Book retrieves a book by its title.
             operationId: Book
             parameters:
-                - name: book_title
+                - name: BookTitle
+                  in: header
+                  required: true
+                  schema:
+                    type: string
+                - name: BookTitle
                   in: query
                   schema:
                     type: string

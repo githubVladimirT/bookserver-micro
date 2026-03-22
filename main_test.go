@@ -39,16 +39,21 @@ func TestHome(t *testing.T) {
 		client.Codec("text/plain", jsoncodec.NewCodec()),
 	)
 
+	cli := client.NewClientCallOptions(
+		c,
+		client.WithAddress(srv.Options().Address),
+	)
+
 	if err := c.Init(); err != nil {
 		t.Fatalf("Client init failed: %v", err)
 	}
 
-	cli := pb.NewBookServerClient(
+	svc := pb.NewBookServerClient(
 		"bookclient-micro",
-		c,
+		cli,
 	)
 
-	rsp, err := cli.Home(
+	rsp, err := svc.Home(
 		ctx,
 		&pb.EmptyReq{},
 		client.WithAddress(srv.Options().Address),
@@ -78,13 +83,18 @@ func TestPush(t *testing.T) {
 		client.Codec("text/plain", jsoncodec.NewCodec()),
 	)
 
+	cli := client.NewClientCallOptions(
+		c,
+		client.WithAddress(srv.Options().Address),
+	)
+
 	if err := c.Init(); err != nil {
 		t.Fatalf("Client init failed: %v", err)
 	}
 
-	cli := pb.NewBookServerClient(
+	svc := pb.NewBookServerClient(
 		"bookclient-micro",
-		c,
+		cli,
 	)
 
 	book_bytes, err := os.ReadFile(TestBookPath)
@@ -117,7 +127,7 @@ func TestPush(t *testing.T) {
 	}
 
 	for i := range books_req {
-		rsp, err := cli.Push(
+		rsp, err := svc.Push(
 			ctx,
 			books_req[i],
 			client.WithAddress(srv.Options().Address),
@@ -148,19 +158,26 @@ func TestBook(t *testing.T) {
 		client.Codec("text/plain", jsoncodec.NewCodec()),
 	)
 
+	cli := client.NewClientCallOptions(
+		c,
+		client.WithAddress(srv.Options().Address),
+	)
+
 	if err := c.Init(); err != nil {
 		t.Fatalf("Client init failed: %v", err)
 	}
 
-	cli := pb.NewBookServerClient(
+	svc := pb.NewBookServerClient(
 		"bookclient-micro",
-		c,
+		cli,
 	)
 
-	rsp, err := cli.Book(
+	rsp, err := svc.Book(
 		ctx,
-		&pb.GetBookReq{BookTitle: "TestBook"},
-		client.WithAddress(srv.Options().Address),
+		&pb.GetBookReq{
+			BookTitle: "TestBook",
+		},
+		mhttp.Header("BookTitle", "TestBook"),
 	)
 
 	if err != nil {
@@ -188,16 +205,21 @@ func TestGetAllBooks(t *testing.T) {
 		client.Codec("text/plain", jsoncodec.NewCodec()),
 	)
 
+	cli := client.NewClientCallOptions(
+		c,
+		client.WithAddress(srv.Options().Address),
+	)
+
 	if err := c.Init(); err != nil {
 		t.Fatalf("Client init failed: %v", err)
 	}
 
-	cli := pb.NewBookServerClient(
+	svc := pb.NewBookServerClient(
 		"bookclient-micro",
-		c,
+		cli,
 	)
 
-	rsp, err := cli.GetAllBooks(
+	rsp, err := svc.GetAllBooks(
 		ctx,
 		&pb.EmptyReq{},
 		client.WithAddress(srv.Options().Address),
@@ -231,18 +253,25 @@ func TestGetAllBooksAndSort(t *testing.T) {
 		client.Codec("text/plain", jsoncodec.NewCodec()),
 	)
 
+	cli := client.NewClientCallOptions(
+		c,
+		client.WithAddress(srv.Options().Address),
+	)
+
 	if err := c.Init(); err != nil {
 		t.Fatalf("Client init failed: %v", err)
 	}
 
-	cli := pb.NewBookServerClient(
+	svc := pb.NewBookServerClient(
 		"bookclient-micro",
-		c,
+		cli,
 	)
 
-	book, err := cli.Book(
+	book, err := svc.Book(
 		ctx,
-		&pb.GetBookReq{BookTitle: "TestBook"},
+		&pb.GetBookReq{
+			BookTitle: "TestBook",
+		},
 		client.WithAddress(srv.Options().Address),
 	)
 
@@ -252,9 +281,11 @@ func TestGetAllBooksAndSort(t *testing.T) {
 
 	sortTypes := []string{"title", "author", "genre", "year"}
 	for _, sortType := range sortTypes {
-		rsp, err := cli.GetAllBooksAndSort(
+		rsp, err := svc.GetAllBooksAndSort(
 			ctx,
-			&pb.SortTypeReq{SortType: sortType},
+			&pb.SortTypeReq{
+				SortType: sortType,
+			},
 			client.WithAddress(srv.Options().Address),
 		)
 

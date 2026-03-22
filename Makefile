@@ -14,7 +14,7 @@ BIN_DIR := ./bin/
 all: clean init build run
 
 clean:
-	rm -f $(BOOKS_DIR)/* $(DB_DIR)/books.db $(BIN_DIR)/* coverage.out
+	rm -f $(BOOKS_DIR)* $(DB_DIR)books.db $(BIN_DIR)* coverage.out
 
 init:
 	mkdir -p $(DB_DIR) $(BOOKS_DIR) $(BIN_DIR)

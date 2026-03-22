@@ -51,6 +51,18 @@ service BookServer {
           };
         };
       };
+      parameters: {
+        parameter: {
+          name  : "BookTitle";
+          in    : "header";
+          schema: {
+            schema: {
+              type: "string";
+            };
+          };
+          required: true;
+        };
+      };
     };
     option (micro.api.http) = { get: "/getbook"; };
     option (micro.api.micro_method) = { timeout: "1s"; };
@@ -81,6 +93,18 @@ service BookServer {
           };
         };
       };
+      parameters: {
+        parameter: {
+          name  : "SortType";
+          in    : "header";
+          schema: {
+            schema: {
+              type: "string";
+            };
+          };
+          required: true;
+        };
+      };
     };
     option (micro.api.http) = { get: "/getallbookssorted"; };
     option (micro.api.micro_method) = { timeout: "1s"; };
@@ -92,12 +116,12 @@ message EmptyReq {};
 
 // GetBookReq is a request to get a book by title.
 message GetBookReq {
-  string book_title = 1;
+  string BookTitle = 1;
 };
 
 // SortTypeReq is a request to specify a sort type.
 message SortTypeReq {
-  string sort_type = 1;
+  string SortType = 1;
 };
 
 // GetAllBooksRsp is the response containing a list of book titles.

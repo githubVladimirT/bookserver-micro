@@ -193,7 +193,7 @@ func (h *ServerHandler) GetAllBooksAndSort(ctx context.Context, req *pb.SortType
 func (h *ServerHandler) Book(ctx context.Context, req *pb.GetBookReq, rsp *pb.GetBookRsp) error {
 	log := InitLog()
 
-	log.Info(ctx, fmt.Sprintf("DEBUG: received request: %+v", req))
+	log.Info(ctx, fmt.Sprintf("BookTitle: %+v", req.BookTitle))
 
 	var title, author, genre, year string
 
