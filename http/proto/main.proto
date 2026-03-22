@@ -1,0 +1,167 @@
+syntax = "proto3";
+
+package bookservermicro;
+option go_package = "github.com/VT0x00/bookserver-micro;pb";
+
+import "tag/tag.proto";
+import "api/annotations.proto";
+import "openapiv3/annotations.proto";
+import "google/protobuf/wrappers.proto";
+
+// BookServer service provides book management endpoints.
+service BookServer {
+  // Home returns the home page.
+  rpc Home(EmptyReq) returns (StatusRsp) {
+    option (micro.openapiv3.openapiv3_operation) = {
+      operation_id: "Home";
+      responses   : {
+        default: {
+          reference: {
+            _ref: ".bookservermicro.ErrorRsp";
+          };
+        };
+      };
+    };
+    option (micro.api.http) = { get: "/"; };
+    option (micro.api.micro_method) = { timeout: "1s"; };
+  };
+  // Push uploads a new book to the server.
+  rpc Push(PostBookReq) returns (StatusUploadedBookRsp) {
+    option (micro.openapiv3.openapiv3_operation) = {
+      operation_id: "Push";
+      responses   : {
+        default: {
+          reference: {
+            _ref: ".bookservermicro.ErrorRsp";
+          };
+        };
+      };
+    };
+    option (micro.api.http) = { post: "/pushbook"; body: "*"; };
+    option (micro.api.micro_method) = { timeout: "1s"; };
+  };
+  // Book retrieves a book by its title.
+  rpc Book(GetBookReq) returns (GetBookRsp) {
+    option (micro.openapiv3.openapiv3_operation) = {
+      operation_id: "Book";
+      responses   : {
+        default: {
+          reference: {
+            _ref: ".bookservermicro.ErrorRsp";
+          };
+        };
+      };
+      parameters: {
+        parameter: {
+          name  : "BookTitle";
+          in    : "query";
+          schema: {
+            schema: {
+              type: "string";
+            };
+          };
+          required: true;
+        };
+      };
+    };
+    option (micro.api.http) = { get: "/getbook"; };
+    option (micro.api.micro_method) = { timeout: "1s"; };
+  };
+  // GetAllBooks retrieves all book titles.
+  rpc GetAllBooks(EmptyReq) returns (GetAllBooksRsp) {
+    option (micro.openapiv3.openapiv3_operation) = {
+      operation_id: "GetAllBooks";
+      responses   : {
+        default: {
+          reference: {
+            _ref: ".bookservermicro.ErrorRsp";
+          };
+        };
+      };
+    };
+    option (micro.api.http) = { get: "/getallbooks"; };
+    option (micro.api.micro_method) = { timeout: "1s"; };
+  };
+  // GetAllBooksAndSort retrieves all books sorted by the specified type.
+  rpc GetAllBooksAndSort(SortTypeReq) returns (GetAllBooksAndSortRsp) {
+    option (micro.openapiv3.openapiv3_operation) = {
+      operation_id: "GetAllBooksAndSort";
+      responses   : {
+        default: {
+          reference: {
+            _ref: ".bookservermicro.ErrorRsp";
+          };
+        };
+      };
+      parameters: {
+        parameter: {
+          name  : "SortType";
+          in    : "query";
+          schema: {
+            schema: {
+              type: "string";
+            };
+          };
+          required: true;
+        };
+      };
+    };
+    option (micro.api.http) = { get: "/getallbookssorted"; };
+    option (micro.api.micro_method) = { timeout: "1s"; };
+  };
+};
+
+// EmptyReq is an empty request message.
+message EmptyReq {};
+
+// GetBookReq is a request to get a book by title.
+message GetBookReq {
+  string BookTitle = 1;
+};
+
+// SortTypeReq is a request to specify a sort type.
+message SortTypeReq {
+  string SortType = 1;
+};
+
+// GetAllBooksRsp is the response containing a list of book titles.
+message GetAllBooksRsp {
+  repeated string books = 1;
+};
+
+// GetAllBooksAndSortRsp is the response containing sorted books.
+message GetAllBooksAndSortRsp {
+  repeated GetBookRsp books = 1;
+};
+
+// PostBookReq is a request to upload a new book.
+message PostBookReq {
+  string book_title = 1;
+  string author     = 2;
+  string genre      = 3;
+  string year       = 4;
+  bytes  book_bytes = 5;
+}
+
+// GetBookRsp is the response containing book details.
+message GetBookRsp {
+  string title  = 1;
+  string author = 2;
+  string genre  = 3;
+  string year   = 4;
+};
+
+// StatusRsp is a response with a status description.
+message StatusRsp {
+  string description = 1;
+};
+
+// StatusUploadedBookRsp is the response after uploading a book.
+message StatusUploadedBookRsp {
+  string book_id = 1;
+};
+
+// ErrorRsp is an error response message.
+message ErrorRsp {
+  string msg = 1;
+};

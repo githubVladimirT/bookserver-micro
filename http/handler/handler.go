@@ -3,22 +3,43 @@ package handler
 import (
 	"bytes"
 	"context"
+	"database/sql"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strconv"
 
-	pb "github.com/githubVladimirT/bookserver-micro/proto"
+	pb "github.com/VT0x00/bookserver-micro/http/proto"
 
-	"github.com/blockloop/scan/v2"
 	"github.com/google/uuid"
 
 	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/jmoiron/sqlx"
-	log "github.com/rs/zerolog/log"
 	httpsrv "go.unistack.org/micro-server-http/v3"
+	"go.unistack.org/micro/v3/logger"
+	"go.unistack.org/micro/v3/logger/slog"
 )
+
+func getProjectRoot() string {
+	_, b, _, _ := runtime.Caller(0)
+	dir := filepath.Dir(b)
+
+	for {
+		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+			return dir
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			break
+		}
+		dir = parent
+	}
+	return ""
+}
 
 // DB Queries
 const (
@@ -34,11 +55,11 @@ const (
 	);
 	`
 
-	insert_book            = `INSERT INTO books VALUES(NULL, ?, ?, ?, ?, ?);`
-	selectid_insertNewBook = `SELECT id FROM books WHERE filepath=?;`
-	selectdata             = `SELECT title, author, genre, year FROM books WHERE title=?;`
-	sort_query             = `SELECT title, author, genre, year FROM books ORDER BY ?;`
-	get_all_books          = `SELECT title FROM books;`
+	insert_book = `INSERT INTO books VALUES(NULL, ?, ?, ?, ?, ?);`
+	// selectid_insertNewBook = `SELECT id FROM books WHERE filepath=?;`
+	selectdata    = `SELECT title, author, genre, year FROM books WHERE title=?;`
+	sort_query    = `SELECT title, author, genre, year FROM books ORDER BY ?;`
+	get_all_books = `SELECT title FROM books;`
 )
 
 type ReturnBook struct {
@@ -60,18 +81,29 @@ type ServerHandler struct {
 	db *sqlx.DB
 }
 
-func InitDB() *sqlx.DB {
-	db, err := sqlx.Open("sqlite3", "db/sqlite3/books.db")
-	if err != nil {
+func InitLog() logger.Logger {
+	log := slog.NewLogger()
+	if err := log.Init(); err != nil {
 		panic(err)
+	}
+	return log
+}
+
+func InitDB() *sqlx.DB {
+	log := InitLog()
+	projectRoot := getProjectRoot()
+	dbPath := filepath.Join(projectRoot, "db/sqlite3/books.db")
+	db, err := sqlx.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Fatal(context.Background(), err.Error())
 	}
 
 	_, err = db.Exec(create_table)
 	if err != nil {
-		panic(err)
+		log.Fatal(context.Background(), err.Error())
 	}
 
-	println(" --- DB inited successfully")
+	log.Info(context.Background(), "database initialized successfully")
 
 	return db
 }
@@ -80,44 +112,38 @@ func NewServerHandler() *ServerHandler {
 	return &ServerHandler{db: InitDB()}
 }
 
-func (h *ServerHandler) InsertNewBook(book Book) (int, error) {
-	var id int
-
-	_, err := h.db.Exec(insert_book, book.Filepath, book.Title, book.Author, book.Genre, book.Year)
-	if err != nil {
-		return -1, err
-	}
-
-	err = h.db.QueryRow(selectid_insertNewBook, book.Filepath).Scan(&id)
-	if err != nil {
-		return -1, err
-	}
-
-	println(id)
-
-	return id, nil
-}
-
-func (h *ServerHandler) Home(ctx context.Context, req *pb.Empty, rsp *pb.StatusRsp) error {
+func (h *ServerHandler) Home(ctx context.Context, req *pb.EmptyReq, rsp *pb.StatusRsp) error {
 	rsp.Description = "HomePage"
 
 	httpsrv.SetRspCode(ctx, http.StatusOK)
 	return nil
 }
 
-func (h *ServerHandler) GetAllBooks(ctx context.Context, req *pb.Empty, rsp *pb.GetAllBooks) error {
+func (h *ServerHandler) GetAllBooks(ctx context.Context, req *pb.EmptyReq, rsp *pb.GetAllBooksRsp) error {
+	log := InitLog()
+
 	var books []string
 
 	rows, err := h.db.Query(get_all_books)
 	if err != nil {
-		log.Info().Msg(err.Error())
+		log.Error(ctx, err.Error())
 		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
 	}
+	defer rows.Close()
 
-	err = scan.Rows(&books, rows)
-	if err != nil {
-		log.Info().Msg(err.Error())
+	for rows.Next() {
+		var title string
+		if err := rows.Scan(&title); err != nil {
+			log.Error(ctx, err.Error())
+			httpsrv.SetRspCode(ctx, http.StatusBadRequest)
+			return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
+		}
+		books = append(books, title)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Error(ctx, err.Error())
 		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
 	}
@@ -128,7 +154,11 @@ func (h *ServerHandler) GetAllBooks(ctx context.Context, req *pb.Empty, rsp *pb.
 	return nil
 }
 
-func (h *ServerHandler) GetAllBooksAndSort(ctx context.Context, req *pb.SortType, rsp *pb.GetAllBooksAndSort) error {
+func (h *ServerHandler) GetAllBooksAndSort(ctx context.Context, req *pb.SortTypeReq, rsp *pb.GetAllBooksAndSortRsp) error {
+	log := InitLog()
+
+	log.Info(ctx, fmt.Sprintf("DEBUG: received request: %+v", req))
+
 	allowedSortFields := map[string]bool{
 		"title":  true,
 		"author": true,
@@ -145,7 +175,7 @@ func (h *ServerHandler) GetAllBooksAndSort(ctx context.Context, req *pb.SortType
 	err := h.db.Select(&books, sort_query, sortField)
 
 	if err != nil {
-		log.Error().Err(err).Msg("Database query failed")
+		log.Error(ctx, err.Error())
 		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
 	}
@@ -160,42 +190,37 @@ func (h *ServerHandler) GetAllBooksAndSort(ctx context.Context, req *pb.SortType
 
 	return nil
 }
-func (h *ServerHandler) Book(ctx context.Context, req *pb.GetBook, rsp *pb.GetBookRsp) error {
-	var books []pb.GetBookRsp
+func (h *ServerHandler) Book(ctx context.Context, req *pb.GetBookReq, rsp *pb.GetBookRsp) error {
+	log := InitLog()
 
-	rows, err := h.db.Queryx(selectdata, req.BookTitle)
-	if err != nil {
-		log.Info().Msg(err.Error())
-		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
-		return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
-	}
-	defer rows.Close()
+	log.Info(ctx, fmt.Sprintf("BookTitle: %+v", req.BookTitle))
 
-	for rows.Next() {
-		var b pb.GetBookRsp
-		if err := rows.StructScan(&b); err != nil {
-			log.Info().Msg(err.Error())
-			httpsrv.SetRspCode(ctx, http.StatusBadRequest)
-			return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
-		}
-		books = append(books, b)
-	}
+	var title, author, genre, year string
 
-	if len(books) == 0 {
+	err := h.db.QueryRow(selectdata, req.BookTitle).Scan(&title, &author, &genre, &year)
+	if err == sql.ErrNoRows {
+		log.Error(ctx, "book not found: "+req.BookTitle)
 		httpsrv.SetRspCode(ctx, http.StatusNotFound)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "book not found"})
 	}
+	if err != nil {
+		log.Error(ctx, err.Error())
+		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
+		return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
+	}
 
-	rsp.Title = books[0].Title
-	rsp.Author = books[0].Author
-	rsp.Genre = books[0].Genre
-	rsp.Year = books[0].Year
+	rsp.Title = title
+	rsp.Author = author
+	rsp.Genre = genre
+	rsp.Year = year
 
 	httpsrv.SetRspCode(ctx, http.StatusOK)
 	return nil
 }
 
-func (h *ServerHandler) Push(ctx context.Context, req *pb.PostBook, rsp *pb.StatusUploadedBookRsp) error {
+func (h *ServerHandler) Push(ctx context.Context, req *pb.PostBookReq, rsp *pb.StatusUploadedBookRsp) error {
+	log := InitLog()
+
 	file := req.BookBytes
 
 	book_title := req.BookTitle
@@ -205,12 +230,11 @@ func (h *ServerHandler) Push(ctx context.Context, req *pb.PostBook, rsp *pb.Stat
 
 	filename := uuid.New().String()
 
-	// log.Info().Msg("--| New file |--")
-	log.Info().Msg("Uploaded File: " + filename)
+	log.Info(ctx, "Uploaded File: "+filename)
 
 	bookFile, err := os.CreateTemp("books", filename+"-*.pdf")
 	if err != nil {
-		log.Info().Msg(err.Error())
+		log.Error(ctx, err.Error())
 		httpsrv.SetRspCode(ctx, http.StatusBadGateway)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "temp file creation error"})
 	}
@@ -218,7 +242,7 @@ func (h *ServerHandler) Push(ctx context.Context, req *pb.PostBook, rsp *pb.Stat
 
 	_, err = io.Copy(bookFile, bytes.NewReader(file))
 	if err != nil {
-		log.Info().Msg(err.Error())
+		log.Error(ctx, err.Error())
 		httpsrv.SetRspCode(ctx, http.StatusBadGateway)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "file creation error"})
 	}
@@ -233,9 +257,9 @@ func (h *ServerHandler) Push(ctx context.Context, req *pb.PostBook, rsp *pb.Stat
 
 	book_id := -1
 
-	book_id, err = h.InsertNewBook(book)
+	book_id, err = h.insertNewBook(book)
 	if err != nil {
-		log.Info().Msg(err.Error())
+		log.Error(ctx, err.Error())
 		httpsrv.SetRspCode(ctx, http.StatusBadRequest)
 		return httpsrv.SetError(&pb.StatusRsp{Description: "database error"})
 	}
@@ -244,4 +268,18 @@ func (h *ServerHandler) Push(ctx context.Context, req *pb.PostBook, rsp *pb.Stat
 
 	httpsrv.SetRspCode(ctx, http.StatusCreated)
 	return nil
+}
+
+func (h *ServerHandler) insertNewBook(book Book) (int, error) {
+	result, err := h.db.Exec(insert_book, book.Filepath, book.Title, book.Author, book.Genre, book.Year)
+	if err != nil {
+		return -1, err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return -1, err
+	}
+
+	return int(id), nil
 }

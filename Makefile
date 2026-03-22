@@ -6,17 +6,21 @@ NAME=bookserver-micro
 GO_CMD := go
 GO_TEST := $(GO_CMD) test
 GO_BUILD := $(GO_CMD) build
+BOOKS_DIR := ./books/
+DB_DIR := ./db/sqlite3/
+BIN_DIR := ./bin/
+
 
 all: clean init build run
 
 clean:
-	rm -f books/* db/sqlite3/books.db bin/* coverage.out
+	rm -f $(BOOKS_DIR)* $(DB_DIR)books.db $(BIN_DIR)* coverage.out
 
 init:
-	mkdir -p db/sqlite3/ books/ bin/
+	mkdir -p $(DB_DIR) $(BOOKS_DIR) $(BIN_DIR)
 
 gen:
-	./gen.sh
+	cd ./http/ && go generate
 
 build: init gen
 	$(GO_BUILD) -o bin/$(NAME)

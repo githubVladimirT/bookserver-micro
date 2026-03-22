@@ -4,53 +4,60 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"slices"
+
 	"path/filepath"
 	"testing"
 
-	"slices"
-
-	pb "github.com/githubVladimirT/bookserver-micro/proto"
+	pb "github.com/VT0x00/bookserver-micro/http/proto"
 
 	mhttp "go.unistack.org/micro-client-http/v3"
-	jsonpbcodec "go.unistack.org/micro-codec-jsonpb/v3"
+	jsoncodec "go.unistack.org/micro-codec-json/v3"
 	"go.unistack.org/micro/v3/client"
 
-	"github.com/githubVladimirT/bookserver-micro/internal"
+	"github.com/VT0x00/bookserver-micro/internal"
+
+	mregister "go.unistack.org/micro/v3/register/memory"
 )
 
 var (
-	URL          = "http://127.0.0.1:8080"
 	projectRoot  = internal.GetProjectRoot()
 	TestBookPath = filepath.Join(projectRoot, "testbooks/TestBookBytes.pdf")
 )
 
 func TestHome(t *testing.T) {
+	reg := mregister.NewRegister()
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	t.Cleanup(cancel)
 
-	readyCh := make(chan struct{})
-	shutdown := internal.InitServerWithReady(ctx, readyCh)
-	defer shutdown()
-	<-readyCh
+	srv := internal.InitServerWithReady(ctx, reg)
+	t.Cleanup(func() { srv.Stop() })
 
 	c := mhttp.NewClient(
+		client.Codec("application/json", jsoncodec.NewCodec()),
 		client.ContentType("application/json"),
-		client.Codec("application/json", jsonpbcodec.NewCodec()),
+		client.Codec("text/plain", jsoncodec.NewCodec()),
 	)
-
-	if err := c.Init(); err != nil {
-		t.Fatalf("client init failed: %v", err)
-	}
 
 	cli := client.NewClientCallOptions(
 		c,
-		client.WithAddress(URL),
+		client.WithAddress(srv.Options().Address),
 	)
 
-	mc := pb.NewBookServerClient("bookserver-micro-client", cli)
+	if err := c.Init(); err != nil {
+		t.Fatalf("Client init failed: %v", err)
+	}
 
-	req := &pb.Empty{}
-	rsp, err := mc.Home(context.TODO(), req)
+	svc := pb.NewBookServerClient(
+		"bookclient-micro",
+		cli,
+	)
+
+	rsp, err := svc.Home(
+		ctx,
+		&pb.EmptyReq{},
+	)
+
 	if err != nil {
 		t.Fatalf("Home call failed: %v", err)
 	}
@@ -62,36 +69,39 @@ func TestHome(t *testing.T) {
 }
 
 func TestPush(t *testing.T) {
+	reg := mregister.NewRegister()
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	t.Cleanup(cancel)
 
-	readyCh := make(chan struct{})
-	shutdown := internal.InitServerWithReady(ctx, readyCh)
-	defer shutdown()
-	<-readyCh
+	srv := internal.InitServerWithReady(ctx, reg)
+	t.Cleanup(func() { srv.Stop() })
 
 	c := mhttp.NewClient(
+		client.Codec("application/json", jsoncodec.NewCodec()),
 		client.ContentType("application/json"),
-		client.Codec("application/json", jsonpbcodec.NewCodec()),
+		client.Codec("text/plain", jsoncodec.NewCodec()),
 	)
-
-	if err := c.Init(); err != nil {
-		t.Fatalf("client init failed: %v", err)
-	}
 
 	cli := client.NewClientCallOptions(
 		c,
-		client.WithAddress(URL),
+		client.WithAddress(srv.Options().Address),
 	)
 
-	mc := pb.NewBookServerClient("bookserver-micro-client", cli)
+	if err := c.Init(); err != nil {
+		t.Fatalf("Client init failed: %v", err)
+	}
+
+	svc := pb.NewBookServerClient(
+		"bookclient-micro",
+		cli,
+	)
 
 	book_bytes, err := os.ReadFile(TestBookPath)
 	if err != nil {
 		t.Fatalf("failed to read test book: %v", err)
 	}
 
-	books := []*pb.PostBook{
+	books_req := []*pb.PostBookReq{
 		{
 			BookTitle: "TestBook",
 			Author:    "TestAuthor",
@@ -115,133 +125,166 @@ func TestPush(t *testing.T) {
 		},
 	}
 
-	for i := range books {
-		book := books[i]
+	for i := range books_req {
+		rsp, err := svc.Push(
+			ctx,
+			books_req[i],
+			mhttp.Method("POST"),
+		)
 
-		rspp, err := mc.Push(context.TODO(), book)
 		if err != nil {
 			t.Fatalf("Push call failed: %v", err)
 		}
 
-		if rspp.BookId == "-1" {
-			t.Errorf("invalid rsp received: %#+v", rspp)
-			return
+		if rsp.BookId == "-1" {
+			t.Fatalf("invalid rsp received: %#+v", rsp)
 		}
 	}
 }
 
 func TestBook(t *testing.T) {
+	reg := mregister.NewRegister()
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	t.Cleanup(cancel)
 
-	readyCh := make(chan struct{})
-	shutdown := internal.InitServerWithReady(ctx, readyCh)
-	defer shutdown()
-	<-readyCh
+	srv := internal.InitServerWithReady(ctx, reg)
+	t.Cleanup(func() { srv.Stop() })
 
 	c := mhttp.NewClient(
+		client.Codec("application/json", jsoncodec.NewCodec()),
 		client.ContentType("application/json"),
-		client.Codec("application/json", jsonpbcodec.NewCodec()),
+		client.Codec("text/plain", jsoncodec.NewCodec()),
 	)
-
-	if err := c.Init(); err != nil {
-		t.Fatalf("client init failed: %v", err)
-	}
 
 	cli := client.NewClientCallOptions(
 		c,
-		client.WithAddress(URL),
+		client.WithAddress(srv.Options().Address),
 	)
 
-	mc := pb.NewBookServerClient("bookserver-micro-client", cli)
+	if err := c.Init(); err != nil {
+		t.Fatalf("Client init failed: %v", err)
+	}
 
-	rspb, err := mc.Book(context.TODO(), &pb.GetBook{BookTitle: "TestBook"})
+	svc := pb.NewBookServerClient(
+		"bookclient-micro",
+		cli,
+	)
+
+	rsp, err := svc.Book(
+		ctx,
+		&pb.GetBookReq{
+			BookTitle: "TestBook",
+		},
+	)
+
 	if err != nil {
 		t.Fatalf("Book call failed: %v", err)
 	}
 
-	if rspb.Title != "TestBook" || rspb.Author != "TestAuthor" || rspb.Genre != "TestGenre" || rspb.Year != "2023" {
-		t.Errorf("invalid rsp received: %#+v", rspb)
-		return
+	if rsp.Title != "TestBook" || rsp.Author != "TestAuthor" || rsp.Genre != "TestGenre" || rsp.Year != "2023" {
+		t.Fatalf("invalid rsp received: %#+v", rsp)
 	}
 
-	t.Logf("Book: %+v", rspb)
+	t.Logf("Book: %+v", rsp)
 }
 
 func TestGetAllBooks(t *testing.T) {
+	reg := mregister.NewRegister()
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	t.Cleanup(cancel)
 
-	readyCh := make(chan struct{})
-	shutdown := internal.InitServerWithReady(ctx, readyCh)
-	defer shutdown()
-	<-readyCh
+	srv := internal.InitServerWithReady(ctx, reg)
+	t.Cleanup(func() { srv.Stop() })
 
 	c := mhttp.NewClient(
+		client.Codec("application/json", jsoncodec.NewCodec()),
 		client.ContentType("application/json"),
-		client.Codec("application/json", jsonpbcodec.NewCodec()),
+		client.Codec("text/plain", jsoncodec.NewCodec()),
 	)
-
-	if err := c.Init(); err != nil {
-		t.Fatalf("client init failed: %v", err)
-	}
 
 	cli := client.NewClientCallOptions(
 		c,
-		client.WithAddress(URL),
+		client.WithAddress(srv.Options().Address),
 	)
 
-	mc := pb.NewBookServerClient("bookserver-micro-client", cli)
+	if err := c.Init(); err != nil {
+		t.Fatalf("Client init failed: %v", err)
+	}
 
-	rspgab, err := mc.GetAllBooks(context.TODO(), &pb.Empty{})
+	svc := pb.NewBookServerClient(
+		"bookclient-micro",
+		cli,
+	)
+
+	rsp, err := svc.GetAllBooks(
+		ctx,
+		&pb.EmptyReq{},
+	)
+
 	if err != nil {
 		t.Fatalf("GetAllBooks call failed: %v", err)
 	}
 
-	if !slices.Contains(rspgab.Books, "TestBook") {
-		t.Errorf("invalid rsp received: %#+v", rspgab)
+	if !slices.Contains(rsp.Books, "TestBook") {
+		t.Errorf("invalid rsp received: %#+v", rsp)
 		return
 	}
 
-	for i, b := range rspgab.Books {
+	for i, b := range rsp.Books {
 		t.Logf("Book %d: %+v", i, b)
 	}
 }
 
 func TestGetAllBooksAndSort(t *testing.T) {
+	reg := mregister.NewRegister()
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	t.Cleanup(cancel)
 
-	readyCh := make(chan struct{})
-	shutdown := internal.InitServerWithReady(ctx, readyCh)
-	defer shutdown()
-	<-readyCh
+	srv := internal.InitServerWithReady(ctx, reg)
+	t.Cleanup(func() { srv.Stop() })
 
 	c := mhttp.NewClient(
+		client.Codec("application/json", jsoncodec.NewCodec()),
 		client.ContentType("application/json"),
-		client.Codec("application/json", jsonpbcodec.NewCodec()),
+		client.Codec("text/plain", jsoncodec.NewCodec()),
 	)
-	if err := c.Init(); err != nil {
-		t.Fatalf("client init failed: %v", err)
-	}
 
 	cli := client.NewClientCallOptions(
 		c,
-		client.WithAddress(URL),
+		client.WithAddress(srv.Options().Address),
 	)
-	mc := pb.NewBookServerClient("bookserver-micro-client", cli)
 
-	book, err := mc.Book(context.TODO(), &pb.GetBook{BookTitle: "TestBook"})
+	if err := c.Init(); err != nil {
+		t.Fatalf("Client init failed: %v", err)
+	}
+
+	svc := pb.NewBookServerClient(
+		"bookclient-micro",
+		cli,
+	)
+
+	book, err := svc.Book(
+		ctx,
+		&pb.GetBookReq{
+			BookTitle: "TestBook",
+		},
+	)
+
 	if err != nil {
-		t.Fatalf("failed to get test book: %v", err)
+		t.Fatalf("GetAllBooksAndSort call failed: %v", err)
 	}
 
 	sortTypes := []string{"title", "author", "genre", "year"}
 	for _, sortType := range sortTypes {
-		rsp, err := mc.GetAllBooksAndSort(context.TODO(), &pb.SortType{SortType: sortType})
+		rsp, err := svc.GetAllBooksAndSort(
+			ctx,
+			&pb.SortTypeReq{
+				SortType: sortType,
+			},
+		)
+
 		if err != nil {
-			t.Errorf("sort by %s failed: %v", sortType, err)
-			continue
+			t.Fatalf("GetAllBooksAndSort call failed: %v", err)
 		}
 
 		if !containsBook(rsp.Books, book) {
